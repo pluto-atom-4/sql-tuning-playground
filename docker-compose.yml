@@ -1,0 +1,172 @@
+# ============================================================================
+# Docker Compose Configuration for SQL Tuning Playground
+# ============================================================================
+# Sets up PostgreSQL, MySQL, and PgBouncer for hands-on learning
+#
+# Usage (with rootless Docker):
+#   docker compose up -d
+#   docker compose logs -f
+#   docker compose exec postgres psql -U postgres -d sql_tuning
+#
+# Services:
+#   - PostgreSQL 17 (port 5432)
+#   - PostgreSQL with PgBouncer pooling (port 6432)
+#   - MySQL 8.0 (port 3306)
+#
+# Storage:
+#   - Persistent volumes: pgdata, mysqldata (survives container restart)
+#   - Initialization scripts auto-loaded on first run
+#
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # =========================================================================
+  # PostgreSQL 17 (Direct access)
+  # =========================================================================
+  postgres:
+    image: postgres:17-alpine
+    container_name: sql-tuning-postgres
+    environment:
+      POSTGRES_DB: sql_tuning
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_INITDB_ARGS: "-c shared_buffers=256MB -c effective_cache_size=1GB -c work_mem=10MB"
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/setup_wordpress_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./scripts/setup_test_data.sql:/docker-entrypoint-initdb.d/02-data.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sql_tuning"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sql-tuning-network
+    labels:
+      - "description=PostgreSQL 17 for Machine Learning exercises (Path B)"
+      - "purpose=ML feature generation and optimization"
+
+  # =========================================================================
+  # PgBouncer (Connection Pooling for PostgreSQL)
+  # =========================================================================
+  # Demonstrates connection pooling: Routes 1000+ app connections through
+  # 20 real database connections
+  #
+  # Usage:
+  #   psql -h localhost -p 6432 -U postgres -d sql_tuning
+  #
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: sql-tuning-pgbouncer
+    environment:
+      # Database configuration
+      DATABASES_HOST: postgres
+      DATABASES_PORT: 5432
+      DATABASES_USER: postgres
+      DATABASES_PASSWORD: postgres
+      DATABASES_DBNAME: sql_tuning
+
+      # Pooling configuration
+      PGBOUNCER_POOL_MODE: transaction
+      PGBOUNCER_MAX_CLIENT_CONN: 1000
+      PGBOUNCER_DEFAULT_POOL_SIZE: 20
+      PGBOUNCER_RESERVE_POOL_SIZE: 5
+      PGBOUNCER_RESERVE_POOL_TIMEOUT: 3
+    ports:
+      - "6432:6432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - sql-tuning-network
+    labels:
+      - "description=Connection pooler for PostgreSQL (demonstrates scaling)"
+      - "purpose=Infrastructure scaling demo for Path B (ML)"
+
+  # =========================================================================
+  # MySQL 8.0
+  # =========================================================================
+  mysql:
+    image: mysql:8.0-alpine
+    container_name: sql-tuning-mysql
+    environment:
+      MYSQL_DATABASE: wordpress_test
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+      # Tuning parameters for learning (not production)
+      MYSQL_INITDB_ARGS: >
+        --default-authentication-plugin=mysql_native_password
+        --innodb_buffer_pool_size=512M
+        --max_connections=200
+        --log_error_verbosity=2
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysqldata:/var/lib/mysql
+      - ./scripts/setup_wordpress_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./scripts/setup_test_data.sql:/docker-entrypoint-initdb.d/02-data.sql
+      - ./config/my.cnf:/etc/mysql/conf.d/my.cnf
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sql-tuning-network
+    labels:
+      - "description=MySQL 8.0 for WordPress exercises (Path A)"
+      - "purpose=WordPress optimization and shared hosting simulation"
+
+networks:
+  sql-tuning-network:
+    driver: bridge
+    name: sql-tuning-network
+
+volumes:
+  pgdata:
+    driver: local
+  mysqldata:
+    driver: local
+
+# ============================================================================
+# Quick Start Commands
+# ============================================================================
+#
+# Start containers:
+#   docker compose up -d
+#
+# View logs:
+#   docker compose logs -f postgres
+#   docker compose logs -f pgbouncer
+#   docker compose logs -f mysql
+#
+# Connect to PostgreSQL (direct):
+#   docker compose exec postgres psql -U postgres -d sql_tuning
+#
+# Connect to PostgreSQL (through PgBouncer):
+#   docker compose exec pgbouncer psql -h localhost -p 6432 -U postgres -d sql_tuning
+#
+# Connect to MySQL:
+#   docker compose exec mysql mysql -u wordpress -p -D wordpress_test
+#
+# Load WordPress schema:
+#   docker compose exec mysql mysql -u wordpress -p wordpress_test < scripts/setup_wordpress_schema.sql
+#
+# Stop containers:
+#   docker compose down
+#
+# Remove volumes (clean slate):
+#   docker compose down -v
+#
+# View resource usage:
+#   docker stats
+#
+# Execute SQL file in container:
+#   docker compose exec mysql mysql -u wordpress -p wordpress_test -e "source /path/to/script.sql"
+#
+# ============================================================================

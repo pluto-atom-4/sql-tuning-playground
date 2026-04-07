@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Bash(psql:*)",
+      "Bash(mysql:*)",
+      "Bash(sqlcmd:*)",
+      "Bash(az sql:*)",
+      "Bash(git:*)",
+      "Edit",
+      "Write"
+    ],
+    "deny": [
+      "Bash(rm -rf:*)",
+      "Bash(sudo:*)",
+      "Write(.env)",
+      "Write(.env.local)",
+      "Write(**/.env*)"
+    ],
+    "ask": [
+      "Bash(DROP|DELETE|TRUNCATE|ALTER TABLE)",
+      "Write(**/*.sql)"
+    ],
+    "defaultMode": "plan"
+  },
+  "env": {
+    "DB_TYPE": "azure",
+    "PGUSER": "postgres",
+    "PGDATABASE": "sql_tuning",
+    "MYSQL_USER": "root"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Write|Edit(**.sql)",
+            "command": "jq -r '.tool_input.file_path // .tool_input.old_string' | head -1 | grep -q '\\.sql$' && echo 'SQL file detected' || true",
+            "statusMessage": "Checking SQL file syntax..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(psql:*|mysql:*|sqlcmd:*)",
+            "command": "echo '{\"systemMessage\": \"✓ Database command executed\"}' | jq -r '.systemMessage' || true",
+            "statusMessage": "Logging database query...",
+            "async": true
+          }
+        ]
+      }
+    ]
+  },
+  "respectGitignore": true,
+  "cleanupPeriodDays": 30,
+  "alwaysThinkingEnabled": true,
+  "spinnerTipsEnabled": true,
+  "spinnerVerbs": {
+    "mode": "append",
+    "verbs": [
+      "Tuning...",
+      "Optimizing...",
+      "Indexing...",
+      "Querying...",
+      "Diagnosing...",
+      "Analyzing...",
+      "Profiling..."
+    ]
+  },
+  "attribution": {
+    "commit": "Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>"
+  }
+}

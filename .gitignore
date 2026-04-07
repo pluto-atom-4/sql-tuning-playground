@@ -1,0 +1,116 @@
+# ============================================================================
+# CREDENTIALS & SECRETS (CRITICAL - Never commit!)
+# ============================================================================
+.env                            # Local environment variables
+.env.local                      # Local environment overrides
+.env.*.local                    # Environment-specific overrides
+*.pem                           # Certificate files
+*.key                           # Private keys
+*.p12                           # PKCS12 certificates
+credentials.json                # Service account credentials
+.azure                          # Azure CLI credentials
+.aws                            # AWS credentials
+
+# ============================================================================
+# CLAUDE CODE PERSONAL SETTINGS (Local overrides only)
+# ============================================================================
+.claude/settings.local.json     # Local Claude Code settings (keep CLAUDE.md in git)
+.claude/worktrees/              # Temporary Claude Code worktrees
+.claude/projects/               # Project-specific cache
+
+# ============================================================================
+# DOCKER & VOLUMES (Generated at runtime - DO NOT COMMIT)
+# ============================================================================
+pgdata/                         # PostgreSQL persistent data volume
+mysqldata/                      # MySQL persistent data volume
+docker-compose.override.yml     # Local Docker Compose overrides
+
+# ============================================================================
+# DATABASE FILES
+# ============================================================================
+*.db                            # SQLite database files
+*.sqlite                        # SQLite database files
+*.sqlite3                       # SQLite database files
+*.mysql                         # MySQL backup/cache files
+*.dump                          # Database dumps
+*.sql.bak                       # SQL backup files
+
+# ============================================================================
+# EXERCISE RESULTS (Generated during learning - DO NOT COMMIT)
+# ============================================================================
+exercises/*/results.txt         # Exercise performance measurements
+exercises/*/measurements.txt    # Exercise metrics
+exercises/**/*.tmp              # Temporary files in exercises
+exercises/**/output.txt         # Exercise output files
+
+# ============================================================================
+# IDE & EDITOR FILES
+# ============================================================================
+.vscode/                        # Visual Studio Code workspace
+.idea/                          # JetBrains IDEs (IntelliJ, PyCharm, WebStorm)
+*.swp                           # Vim swap files
+*.swo                           # Vim backup files
+*~                              # Emacs backup files
+*.sublime-project               # Sublime Text project
+*.sublime-workspace             # Sublime Text workspace
+.DS_Store                       # macOS system files
+._*                             # macOS metadata files
+.Spotlight-V100                 # macOS Spotlight index
+.Trashes                        # macOS trash
+ehthumbs.db                     # Windows thumbnail cache
+Thumbs.db                       # Windows thumbnail cache
+
+# ============================================================================
+# DATABASE & LOG FILES
+# ============================================================================
+logs/                           # Log directories
+tmp/                            # Temporary files directory
+*.log                           # All log files
+*.logs                          # Log files
+mysql-slow.log                  # MySQL slow query log
+postgres.log                    # PostgreSQL log
+*.pid                           # Process ID files
+
+# ============================================================================
+# TEMPORARY & GENERATED FILES
+# ============================================================================
+*.tmp                           # Temporary files
+*.temp                          # Temporary files
+*.bak                           # Backup files
+*.old                           # Old files
+.cache/                         # Cache directories
+.tmp/                           # Temporary directory
+
+# ============================================================================
+# NODE & JAVASCRIPT (if package.json added later)
+# ============================================================================
+node_modules/                   # Node dependencies
+npm-debug.log                   # NPM debug logs
+yarn-error.log                  # Yarn error logs
+.npm/                           # NPM cache
+package-lock.json               # Optional: lock file
+
+# ============================================================================
+# PYTHON (if Python scripts added later)
+# ============================================================================
+__pycache__/                    # Python cache directory
+*.py[cod]                       # Compiled Python files
+*$py.class                      # Python class files
+.Python                         # Python interpreter
+venv/                           # Virtual environment
+env/                            # Alternative venv
+.venv                           # Hidden venv
+*.egg-info/                     # Egg info
+dist/                           # Distribution builds
+
+# ============================================================================
+# TEST & COVERAGE REPORTS
+# ============================================================================
+.coverage                       # Coverage reports
+htmlcov/                        # Coverage HTML reports
+.pytest_cache/                  # Pytest cache
+.mypy_cache/                    # MyPy type checker cache
+.pylint.d/                      # Pylint cache
+
+*.backup
+.idea/
