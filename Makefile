@@ -7,9 +7,9 @@
 #   make help           # Show all commands
 #   make setup-azure    # Create Azure SQL database
 #   make setup-local    # Start local Docker environment
-#   make load-schema    # Load WordPress schema
-#   make load-data      # Load test data
-#   make optimize       # Run optimization script
+#   make load-schema    # Load WordPress schema (MariaDB) + ML schema (PostgreSQL)
+#   make load-data      # Load test data (MariaDB + PostgreSQL)
+#   make optimize       # Run ML optimization (PostgreSQL) + WordPress optimization (MariaDB)
 #   make test-perf      # Test query performance
 #   make clean          # Stop and remove containers
 #
@@ -27,14 +27,14 @@ help:
 	@echo "  make setup-local              Start local Docker environment (PostgreSQL + MySQL)"
 	@echo ""
 	@echo "LOAD DATA:"
-	@echo "  make load-schema              Load WordPress schema (postgres + mysql)"
-	@echo "  make load-data                Load test data (postgres + mysql)"
-	@echo "  make load-all                 Load schema + data (postgres + mysql)"
+	@echo "  make load-schema              Load WordPress schema (MariaDB) + ML schema (PostgreSQL)"
+	@echo "  make load-data                Load WordPress test data (MariaDB) + ML test data (PostgreSQL)"
+	@echo "  make load-all                 Load schema + data for both databases"
 	@echo ""
 	@echo "OPTIMIZATION:"
-	@echo "  make optimize                 Run optimization script"
-	@echo "  make optimize-postgres        Run optimization on PostgreSQL"
-	@echo "  make optimize-mysql           Run optimization on MySQL"
+	@echo "  make optimize                 Run ML optimization (PostgreSQL) + WordPress optimization (MariaDB)"
+	@echo "  make optimize-postgres        Run ML pipeline optimization on PostgreSQL (Path B)"
+	@echo "  make optimize-mysql           Run WordPress optimization on MariaDB (Path A)"
 	@echo ""
 	@echo "TESTING:"
 	@echo "  make test-perf                Run performance test queries"
@@ -103,14 +103,14 @@ load-all: load-schema load-data
 # ============================================================================
 
 optimize:
-	@echo "Running optimization on PostgreSQL..."
-	docker compose exec -T postgres psql -U postgres -d sql_tuning < scripts/optimize_wordpress.sql
+	@echo "Running ML pipeline optimization on PostgreSQL (Path B)..."
+	docker compose exec -T postgres psql -U postgres -d sql_tuning < scripts/optimize_ml_pipeline.sql
 	@echo ""
-	@echo "Running optimization on MySQL..."
+	@echo "Running WordPress optimization on MariaDB (Path A)..."
 	docker compose exec -T mysql mariadb -u wordpress -pwordpress wordpress_test < scripts/optimize_wordpress.sql
 
 optimize-postgres:
-	docker compose exec -T postgres psql -U postgres -d sql_tuning < scripts/optimize_wordpress.sql
+	docker compose exec -T postgres psql -U postgres -d sql_tuning < scripts/optimize_ml_pipeline.sql
 
 optimize-mysql:
 	docker compose exec -T mysql mariadb -u wordpress -pwordpress wordpress_test < scripts/optimize_wordpress.sql
@@ -122,11 +122,11 @@ optimize-mysql:
 test-perf:
 	@echo "Testing query performance..."
 	@echo ""
-	@echo "PostgreSQL - BEFORE optimization (should be slow):"
+	@echo "PostgreSQL (Path B) - ML feature generation baseline (should be slow without optimization):"
 	docker compose exec postgres psql -U postgres -d sql_tuning -c \
-	  "EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value FROM wp_postmeta WHERE post_id = 1 LIMIT 10;" || true
+	  "EXPLAIN ANALYZE SELECT s.student_id, COUNT(DISTINCT ca.assignment_id) AS assignments_completed, AVG(ca.score) AS avg_score FROM student_enrollments s LEFT JOIN course_assignments ca ON s.student_id = ca.student_id GROUP BY s.student_id LIMIT 10;" || true
 	@echo ""
-	@echo "MySQL - BEFORE optimization (should be slow):"
+	@echo "MariaDB (Path A) - WordPress wp_postmeta baseline (should be slow without index):"
 	docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test -e \
 	  "EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value FROM wp_postmeta WHERE post_id = 1 LIMIT 10;" || true
 
