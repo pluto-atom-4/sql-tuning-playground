@@ -38,10 +38,12 @@ make setup-local
 make docker-status
 ```
 
-**Step 2: Load Schemas & Test Data** (2 minutes)
+**Step 2: Load Local Exercise Data** (2 minutes)
 
 ```bash
-# Load WordPress schema + test data for both PostgreSQL and MariaDB
+# Load all local datasets used by the Docker environment:
+# - WordPress schema + test data for MariaDB (Path A)
+# - PostgreSQL schema + test data for Path B exercises
 make load-all
 ```
 
