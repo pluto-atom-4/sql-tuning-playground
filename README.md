@@ -43,8 +43,9 @@ make docker-status
 ```bash
 # Load the local WordPress dataset used by the Docker environment:
 # - WordPress schema + test data for MariaDB (Path A)
+# - WordPress schema + test data for PostgreSQL (local Docker only)
 # Note: `make load-all` does not load the ML schema/data for Path B exercises.
-# Path B users should run the ML schema/data commands in the PostgreSQL section below.
+# Path B users should still run the ML schema/data commands in the PostgreSQL section below.
 make load-all
 ```
 
