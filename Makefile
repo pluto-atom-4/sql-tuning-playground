@@ -76,7 +76,7 @@ setup-local:
 	@echo "✓ Containers started!"
 	@echo ""
 	@echo "PostgreSQL:              psql -h localhost -p 5432 -U postgres -d sql_tuning"
-	@echo "MariaDB (MySQL-compat):  mysql -h localhost -u wordpress -p -D wordpress_test"
+	@echo "MariaDB (MySQL-compatible):  mysql -h localhost -u wordpress -p -D wordpress_test"
 	@echo "PgBouncer:   psql -h localhost -p 6432 -U postgres -d sql_tuning"
 
 # ============================================================================
