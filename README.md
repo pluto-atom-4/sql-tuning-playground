@@ -26,49 +26,131 @@ All three paths teach the same core skill: **diagnosing slow queries and fixing 
 
 ### Option 1: Local Docker (Recommended for Paths A & B)
 
+#### Common Steps (Applies to All Paths)
+
+**Step 1: Start All Containers** (2 minutes)
+
 ```bash
-# 1. Start containers (PostgreSQL, MySQL, PgBouncer)
+# Start PostgreSQL (Port 5432), MariaDB (Port 3306), and PgBouncer (Port 6432)
 make setup-local
 
-# 2. Load all data
+# Verify all containers are healthy
+make docker-status
+```
+
+**Step 2: Load Schemas & Test Data** (2 minutes)
+
+```bash
+# Load WordPress schema + test data for both PostgreSQL and MariaDB
 make load-all
 ```
 
-**PostgreSQL path** (run inside `make test-postgres`):
-```sql
--- 3. Connect: make test-postgres
+---
 
--- 4. Run your first optimization (baseline)
-EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
-FROM wp_postmeta WHERE post_id = 1;
--- Expected: ~250ms, 5000 rows examined (full table scan)
+#### MariaDB Section (Path A - WordPress Optimization)
 
--- 5. Add the magic index
-CREATE INDEX idx_post_id_meta_key ON wp_postmeta (post_id, meta_key);
+**Objective**: Fix a slow WordPress query from 250ms → 5ms (50x faster)
 
--- 6. Run the same query again (fast!)
-EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
-FROM wp_postmeta WHERE post_id = 1;
--- Expected: ~5ms, 50 rows examined ✨ (50x faster!)
+**Step 3: Connect to MariaDB**
+
+```bash
+make test-mysql
+# Or manually: docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test
 ```
 
-**MySQL/MariaDB path** (run inside `make test-mysql`):
+**Step 4: Baseline Performance (BEFORE optimization)**
+
 ```sql
--- 3. Connect: make test-mysql
-
--- 4. Run your first optimization (baseline)
-EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
+-- How slow is the query NOW?
+EXPLAIN FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value 
 FROM wp_postmeta WHERE post_id = 1;
--- Expected: ~250ms, 5000 rows examined (full table scan)
 
--- 5. Add the magic index
+-- Expected:
+-- Type: ALL (full table scan - slow!)
+-- Rows examined: 5000
+-- Rows returned: 50
+-- Execution time: ~250ms
+```
+
+**Step 5: Add the Magic Index**
+
+```sql
 ALTER TABLE wp_postmeta ADD INDEX idx_post_id_meta_key (post_id, meta_key);
-
--- 6. Run the same query again (fast!)
-EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
-FROM wp_postmeta WHERE post_id = 1;
--- Expected: ~5ms, 50 rows examined ✨ (50x faster!)
 ```
+
+**Step 6: Verify Optimization (AFTER index)**
+
+```sql
+EXPLAIN FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value 
+FROM wp_postmeta WHERE post_id = 1;
+
+-- Expected:
+-- Type: ref (index seek - fast!)
+-- Rows examined: 50
+-- Rows returned: 50
+-- Execution time: ~5ms ✨ (50x faster!)
+```
+
+**Next**: Read `exercises/day1_wordpress_audit/README.md` for full Day 1 curriculum
+
+---
+
+#### PostgreSQL Section (Path B - Machine Learning)
+
+**Objective**: Learn PostgreSQL optimization for ML feature generation pipelines
+
+**Step 3: Load ML Schema & Test Data** (Required for Path B)
+
+```bash
+# PostgreSQL loads WordPress schema by default, but Path B uses ML schema
+docker compose exec postgres psql -U postgres -d sql_tuning -f scripts/setup_ml_schema.sql
+docker compose exec postgres psql -U postgres -d sql_tuning -f scripts/setup_ml_test_data.sql
+```
+
+**Step 4: Connect to PostgreSQL**
+
+```bash
+make test-postgres
+# Or manually: docker compose exec postgres psql -U postgres -d sql_tuning
+```
+
+**Step 5: Explore ML Feature Generation Tables**
+
+```sql
+-- Check the ML tables
+\dt  -- List all tables (you should see student_enrollments, course_assignments, final_grades, etc.)
+
+-- Count records
+SELECT COUNT(*) as total_students FROM student_enrollments;
+SELECT COUNT(*) as total_assignments FROM course_assignments;
+SELECT COUNT(*) as total_grades FROM final_grades;
+```
+
+**Step 6: Run a Baseline ML Query** (Feature generation - BEFORE optimization)
+
+```sql
+-- This is a typical feature generation query for ML training
+-- It's slow because it joins multiple tables without optimization
+EXPLAIN ANALYZE SELECT 
+  se.student_id,
+  COUNT(DISTINCT ca.assignment_id) as assignments_completed,
+  AVG(ca.assignment_score) as avg_assignment_score,
+  COUNT(DISTINCT e.course_id) as courses_enrolled
+FROM student_enrollments se
+LEFT JOIN course_assignments ca ON se.student_id = ca.student_id
+LEFT JOIN student_enrollments e ON se.student_id = e.student_id
+GROUP BY se.student_id;
+
+-- Expected: Slow with sequential scans, no indexes on join columns
+```
+
+**Next**: Read `exercises/day2_ml_optimization/README.md` for full ML Path B curriculum (feature stores, materialized views, incremental updates)
+
+---
+
+#### ✅ Success!
+
+You've just achieved **50x optimization** on both databases. Choose your path and continue with the exercises!
 
 ### Option 2: Azure SQL (For Path C - ETL exercises)
 
