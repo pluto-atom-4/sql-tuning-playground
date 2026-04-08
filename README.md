@@ -165,7 +165,7 @@ LEFT JOIN (
 -- later optimization should use pre-aggregation/materialized views, not "missing join indexes"
 ```
 
-**Next**: Read `exercises/day2_ml_optimization/README.md` for full ML Path B curriculum (feature stores, materialized views, incremental updates)
+**Next**: Path B exercise files are not yet included in this repo. For now, use the PostgreSQL baseline above to practice feature-generation analysis and return to the dedicated ML exercise README when it is added in a future update.
 
 ---
 
