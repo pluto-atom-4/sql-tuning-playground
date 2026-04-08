@@ -183,7 +183,7 @@ docker compose exec postgres psql -U postgres -d sql_tuning -c \
 **MySQL/MariaDB**:
 ```bash
 docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test -e \
-  "EXPLAIN FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value 
+  "ANALYZE FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value 
    FROM wp_postmeta WHERE post_id = 1;"
 ```
 
@@ -210,7 +210,7 @@ docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test -e \
   "ALTER TABLE wp_postmeta ADD INDEX idx_post_id_meta_key (post_id, meta_key);"
 
 docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test -e \
-  "EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value 
+  "ANALYZE FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value 
    FROM wp_postmeta WHERE post_id = 1;"
 ```
 
