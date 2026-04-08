@@ -11,15 +11,13 @@
 # Services:
 #   - PostgreSQL 17 (port 5432)
 #   - PostgreSQL with PgBouncer pooling (port 6432)
-#   - MySQL 8.0 (port 3306)
+#   - MariaDB (port 3306)
 #
 # Storage:
 #   - Persistent volumes: pgdata, mysqldata (survives container restart)
 #   - Initialization scripts auto-loaded on first run
 #
 # ============================================================================
-
-version: '3.8'
 
 services:
   # =========================================================================
@@ -91,26 +89,20 @@ services:
   # MySQL 8.0
   # =========================================================================
   mysql:
-    image: mysql:8.0-alpine
+    image: lscr.io/linuxserver/mariadb:latest
     container_name: sql-tuning-mysql
     environment:
       MYSQL_DATABASE: wordpress_test
       MYSQL_ROOT_PASSWORD: root
       MYSQL_USER: wordpress
       MYSQL_PASSWORD: wordpress
-      # Tuning parameters for learning (not production)
-      MYSQL_INITDB_ARGS: >
-        --default-authentication-plugin=mysql_native_password
-        --innodb_buffer_pool_size=512M
-        --max_connections=200
-        --log_error_verbosity=2
     ports:
       - "3306:3306"
     volumes:
-      - mysqldata:/var/lib/mysql
-      - ./scripts/setup_wordpress_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ./scripts/setup_test_data.sql:/docker-entrypoint-initdb.d/02-data.sql
-      - ./config/my.cnf:/etc/mysql/conf.d/my.cnf
+      - mysqldata:/config
+      - ./scripts/setup_wordpress_schema.sql:/config/initdb.d/01-schema.sql
+      - ./scripts/setup_test_data.sql:/config/initdb.d/02-data.sql
+      - ./config/my.cnf:/config/custom.cnf
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
@@ -119,7 +111,7 @@ services:
     networks:
       - sql-tuning-network
     labels:
-      - "description=MySQL 8.0 for WordPress exercises (Path A)"
+      - "description=MariaDB for WordPress exercises (Path A)"
       - "purpose=WordPress optimization and shared hosting simulation"
 
 networks:
