@@ -126,9 +126,9 @@ test-perf:
 	docker compose exec postgres psql -U postgres -d sql_tuning -c \
 	  "EXPLAIN ANALYZE SELECT s.student_id, COUNT(DISTINCT ca.assignment_id) AS assignments_completed, AVG(ca.score) AS avg_score FROM student_enrollments s LEFT JOIN course_assignments ca ON s.student_id = ca.student_id GROUP BY s.student_id LIMIT 10;" || true
 	@echo ""
-	@echo "MariaDB (Path A) - WordPress wp_postmeta baseline (should be slow without index):"
+	@echo "MariaDB (Path A) - WordPress wp_postmeta baseline (benefits from a composite index on post_id, meta_key):"
 	docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test -e \
-	  "EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value FROM wp_postmeta WHERE post_id = 1 LIMIT 10;" || true
+	  "EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value FROM wp_postmeta WHERE post_id = 1 AND meta_key = '_thumbnail_id' LIMIT 10;" || true
 
 test-postgres:
 	@echo "Connecting to PostgreSQL..."
