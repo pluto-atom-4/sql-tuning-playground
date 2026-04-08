@@ -39,7 +39,7 @@ help:
 	@echo "TESTING:"
 	@echo "  make test-perf                Run performance test queries"
 	@echo "  make test-postgres            Connect to PostgreSQL psql"
-	@echo "  make test-mysql               Connect to MySQL shell"
+	@echo "  make test-mysql               Connect to MariaDB (MySQL-compatible) shell"
 	@echo "  make test-pgbouncer           Test connection pooling"
 	@echo ""
 	@echo "MONITORING:"
@@ -71,12 +71,12 @@ setup-local:
 	@echo "Waiting for databases to be healthy..."
 	@sleep 10
 	@docker compose exec postgres pg_isready -U postgres -d sql_tuning || echo "PostgreSQL starting..."
-	@docker compose exec mysql mysqladmin ping -h localhost || echo "MySQL starting..."
+	@docker compose exec mysql mysqladmin ping -h localhost || echo "MariaDB (MySQL-compatible) starting..."
 	@echo ""
 	@echo "✓ Containers started!"
 	@echo ""
-	@echo "PostgreSQL:  psql -h localhost -p 5432 -U postgres -d sql_tuning"
-	@echo "MySQL:       mysql -h localhost -u wordpress -p -D wordpress_test"
+	@echo "PostgreSQL:              psql -h localhost -p 5432 -U postgres -d sql_tuning"
+	@echo "MariaDB (MySQL-compat):  mysql -h localhost -u wordpress -p -D wordpress_test"
 	@echo "PgBouncer:   psql -h localhost -p 6432 -U postgres -d sql_tuning"
 
 # ============================================================================
@@ -135,7 +135,7 @@ test-postgres:
 	docker compose exec postgres psql -U postgres -d sql_tuning
 
 test-mysql:
-	@echo "Connecting to MySQL..."
+	@echo "Connecting to MariaDB (MySQL-compatible)..."
 	docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test
 
 test-pgbouncer:
