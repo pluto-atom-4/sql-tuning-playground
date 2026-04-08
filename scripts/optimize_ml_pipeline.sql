@@ -296,8 +296,8 @@ BEGIN
       total_forum_posts = (SELECT SUM(forum_posts) FROM student_engagement WHERE student_id = p_student_id)
   WHERE student_id = p_student_id;
 
-  -- Refresh materialized view
-  REFRESH MATERIALIZED VIEW CONCURRENTLY ml_training_dataset;
+  -- Refresh materialized view (non-concurrent: CONCURRENTLY cannot run inside a transaction block)
+  REFRESH MATERIALIZED VIEW ml_training_dataset;
 END;
 $$ LANGUAGE plpgsql;
 
