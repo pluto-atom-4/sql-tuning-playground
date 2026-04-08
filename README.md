@@ -63,8 +63,8 @@ make test-mysql
 **Step 4: Baseline Performance (BEFORE optimization)**
 
 ```sql
--- How slow is the query NOW? (EXPLAIN ANALYZE shows optimizer estimates + actual runtime stats)
-EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
+-- How slow is the query NOW? (ANALYZE FORMAT=JSON shows optimizer estimates + actual runtime stats)
+ANALYZE FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value
 FROM wp_postmeta WHERE post_id = 1;
 
 -- Expected output includes:
@@ -81,7 +81,7 @@ ALTER TABLE wp_postmeta ADD INDEX idx_post_id_meta_key (post_id, meta_key(191));
 **Step 6: Verify Optimization (AFTER index)**
 
 ```sql
-EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
+ANALYZE FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value
 FROM wp_postmeta WHERE post_id = 1;
 
 -- Expected output includes:
