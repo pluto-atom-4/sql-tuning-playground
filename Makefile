@@ -130,7 +130,7 @@ test-perf:
 	@echo ""
 	@echo "MySQL - BEFORE optimization (should be slow):"
 	docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test -e \
-	  "EXPLAIN FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value FROM wp_postmeta WHERE post_id = 1 LIMIT 10;" || true
+	  "EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value FROM wp_postmeta WHERE post_id = 1 LIMIT 10;" || true
 
 test-postgres:
 	@echo "Connecting to PostgreSQL..."
