@@ -224,9 +224,9 @@ sql-tuning-playground/
 │
 ├── exercises/
 │   ├── day1_wordpress_audit/            # Path A exercises (WordPress optimization)
-│   ├── day2_ml_optimization/            # Path B exercises (ML feature generation)
-│   ├── day3_etl_analytics/              # Path C exercises (ETL pipelines)
-│   └── day3_incident_simulations/       # All paths: Rapid diagnosis scenarios
+│   ├── day2_ml_optimization/            # (planned) Path B exercises (ML feature generation)
+│   ├── day3_etl_analytics/              # (planned) Path C exercises (ETL pipelines)
+│   └── day3_incident_simulations/       # (planned) All paths: Rapid diagnosis scenarios
 │
 ├── docker-compose.yml           # Local database services (PostgreSQL, MariaDB, PgBouncer)
 ├── Makefile                     # Automation targets (setup, load, test, optimize)
