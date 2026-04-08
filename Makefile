@@ -86,16 +86,16 @@ setup-local:
 load-schema:
 	@echo "Loading WordPress schema..."
 	@echo "PostgreSQL:"
-	docker compose exec postgres psql -U postgres -d sql_tuning -f /docker-entrypoint-initdb.d/01-schema.sql 2>/dev/null || echo "Schema already loaded (first run auto-loads)"
+	docker compose exec -T postgres psql -U postgres -d sql_tuning < scripts/setup_wordpress_schema.sql
 	@echo "MySQL:"
-	docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test -e "SOURCE /docker-entrypoint-initdb.d/01-schema.sql" 2>/dev/null || echo "Schema already loaded"
+	docker compose exec -T mysql mariadb -u wordpress -pwordpress wordpress_test < scripts/setup_wordpress_schema.sql
 
 load-data:
 	@echo "Loading test data..."
 	@echo "PostgreSQL:"
-	docker compose exec postgres psql -U postgres -d sql_tuning -f /docker-entrypoint-initdb.d/02-data.sql 2>/dev/null || echo "Data already loaded"
+	docker compose exec -T postgres psql -U postgres -d sql_tuning < scripts/setup_test_data.sql
 	@echo "MySQL:"
-	docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test -e "SOURCE /docker-entrypoint-initdb.d/02-data.sql" 2>/dev/null || echo "Data already loaded"
+	docker compose exec -T mysql mariadb -u wordpress -pwordpress wordpress_test < scripts/setup_test_data.sql
 
 load-all: load-schema load-data
 	@echo "✓ Schema and data loaded"
@@ -106,16 +106,16 @@ load-all: load-schema load-data
 
 optimize:
 	@echo "Running optimization on PostgreSQL..."
-	docker compose exec postgres psql -U postgres -d sql_tuning -f scripts/optimize_wordpress.sql
+	docker compose exec -T postgres psql -U postgres -d sql_tuning < scripts/optimize_wordpress.sql
 	@echo ""
 	@echo "Running optimization on MySQL..."
-	docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test -e "SOURCE scripts/optimize_wordpress.sql"
+	docker compose exec -T mysql mariadb -u wordpress -pwordpress wordpress_test < scripts/optimize_wordpress.sql
 
 optimize-postgres:
-	docker compose exec postgres psql -U postgres -d sql_tuning -f scripts/optimize_wordpress.sql
+	docker compose exec -T postgres psql -U postgres -d sql_tuning < scripts/optimize_wordpress.sql
 
 optimize-mysql:
-	docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test -e "SOURCE scripts/optimize_wordpress.sql"
+	docker compose exec -T mysql mariadb -u wordpress -pwordpress wordpress_test < scripts/optimize_wordpress.sql
 
 # ============================================================================
 # TESTING & PERFORMANCE

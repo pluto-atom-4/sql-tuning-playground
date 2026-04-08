@@ -32,38 +32,42 @@ make setup-local
 
 # 2. Load all data
 make load-all
+```
 
-# 3. Connect to MySQL for WordPress exercises
-make test-mysql
+**PostgreSQL path** (run inside `make test-postgres`):
+```sql
+-- 3. Connect: make test-postgres
 
-# 4. Run your first optimization
-# PostgreSQL:
-EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value 
+-- 4. Run your first optimization (baseline)
+EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
 FROM wp_postmeta WHERE post_id = 1;
+-- Expected: ~250ms, 5000 rows examined (full table scan)
 
-# MySQL/MariaDB:
-EXPLAIN FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value 
-FROM wp_postmeta WHERE post_id = 1;
-
-# Expected: ~250ms, 5000 rows examined
-
-# 5. Add the magic index
-# PostgreSQL:
+-- 5. Add the magic index
 CREATE INDEX idx_post_id_meta_key ON wp_postmeta (post_id, meta_key);
 
-# MySQL/MariaDB:
+-- 6. Run the same query again (fast!)
+EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
+FROM wp_postmeta WHERE post_id = 1;
+-- Expected: ~5ms, 50 rows examined ✨ (50x faster!)
+```
+
+**MySQL/MariaDB path** (run inside `make test-mysql`):
+```sql
+-- 3. Connect: make test-mysql
+
+-- 4. Run your first optimization (baseline)
+EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
+FROM wp_postmeta WHERE post_id = 1;
+-- Expected: ~250ms, 5000 rows examined (full table scan)
+
+-- 5. Add the magic index
 ALTER TABLE wp_postmeta ADD INDEX idx_post_id_meta_key (post_id, meta_key);
 
-# 6. Run the same query again (fast!)
-# PostgreSQL:
-EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value 
+-- 6. Run the same query again (fast!)
+EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
 FROM wp_postmeta WHERE post_id = 1;
-
-# MySQL/MariaDB:
-EXPLAIN FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value 
-FROM wp_postmeta WHERE post_id = 1;
-
-# Expected: ~5ms, 50 rows examined ✨ (50x faster!)
+-- Expected: ~5ms, 50 rows examined ✨ (50x faster!)
 ```
 
 ### Option 2: Azure SQL (For Path C - ETL exercises)

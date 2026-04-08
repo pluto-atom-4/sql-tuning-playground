@@ -152,7 +152,7 @@ WHERE post_id = 1;
 **MySQL/MariaDB**:
 ```sql
 -- How slow is it BEFORE optimization?
-EXPLAIN FORMAT=JSON
+EXPLAIN ANALYZE
 SELECT meta_id, post_id, meta_key, meta_value
 FROM wp_postmeta
 WHERE post_id = 1;
@@ -166,9 +166,16 @@ WHERE post_id = 1;
 
 ### Step 2: Add Index
 
+**PostgreSQL**:
 ```sql
 -- Add the compound index (post_id, meta_key)
-ALTER TABLE wp_postmeta ADD INDEX idx_post_id_meta_key 
+CREATE INDEX idx_post_id_meta_key ON wp_postmeta (post_id, meta_key);
+```
+
+**MySQL/MariaDB**:
+```sql
+-- Add the compound index (post_id, meta_key)
+ALTER TABLE wp_postmeta ADD INDEX idx_post_id_meta_key
   (post_id, meta_key(191));
 ```
 
@@ -189,7 +196,7 @@ WHERE post_id = 1;
 
 **MySQL/MariaDB**:
 ```sql
-EXPLAIN FORMAT=JSON
+EXPLAIN ANALYZE
 SELECT meta_id, post_id, meta_key, meta_value
 FROM wp_postmeta
 WHERE post_id = 1;
