@@ -132,18 +132,36 @@ SELECT COUNT(*) as total_grades FROM final_grades;
 
 ```sql
 -- This is a typical feature generation query for ML training
--- It's slow because it joins multiple tables without optimization
-EXPLAIN ANALYZE SELECT 
-  se.student_id,
-  COUNT(DISTINCT ca.assignment_id) as assignments_completed,
-  AVG(ca.assignment_score) as avg_assignment_score,
-  COUNT(DISTINCT e.course_id) as courses_enrolled
-FROM student_enrollments se
-LEFT JOIN course_assignments ca ON se.student_id = ca.student_id
-LEFT JOIN student_enrollments e ON se.student_id = e.student_id
-GROUP BY se.student_id;
+-- It is intentionally unoptimized because it computes aggregates at query time
+-- across large tables instead of reading from a precomputed feature store
+EXPLAIN ANALYZE
+SELECT
+  s.student_id,
+  COALESCE(a.assignments_completed, 0) AS assignments_completed,
+  a.avg_assignment_score,
+  COALESCE(e.courses_enrolled, 0) AS courses_enrolled
+FROM (
+  SELECT DISTINCT student_id
+  FROM student_enrollments
+) s
+LEFT JOIN (
+  SELECT
+    student_id,
+    COUNT(DISTINCT assignment_id) AS assignments_completed,
+    AVG(assignment_score) AS avg_assignment_score
+  FROM course_assignments
+  GROUP BY student_id
+) a ON s.student_id = a.student_id
+LEFT JOIN (
+  SELECT
+    student_id,
+    COUNT(DISTINCT course_id) AS courses_enrolled
+  FROM student_enrollments
+  GROUP BY student_id
+) e ON s.student_id = e.student_id;
 
--- Expected: Slow with sequential scans, no indexes on join columns
+-- Expected: Slower baseline due to repeated aggregation over large tables;
+-- later optimization should use pre-aggregation/materialized views, not "missing join indexes"
 ```
 
 **Next**: Read `exercises/day2_ml_optimization/README.md` for full ML Path B curriculum (feature stores, materialized views, incremental updates)
