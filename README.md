@@ -48,6 +48,10 @@ FROM wp_postmeta WHERE post_id = 1;
 # Expected: ~250ms, 5000 rows examined
 
 # 5. Add the magic index
+# PostgreSQL:
+CREATE INDEX idx_post_id_meta_key ON wp_postmeta (post_id, meta_key);
+
+# MySQL/MariaDB:
 ALTER TABLE wp_postmeta ADD INDEX idx_post_id_meta_key (post_id, meta_key);
 
 # 6. Run the same query again (fast!)
