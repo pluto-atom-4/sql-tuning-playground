@@ -281,7 +281,7 @@ sql-tuning-playground/
 
 **Time**: 2-3 hours  
 **Database**: PostgreSQL 17 (Docker)  
-**Start Here**: `exercises/day2_ml_optimization/README.md`
+**Start Here**: *(planned — `exercises/day2_ml_optimization/` not yet included)*
 
 ---
 
@@ -304,7 +304,7 @@ sql-tuning-playground/
 
 **Time**: 2-3 hours  
 **Database**: Azure SQL (Cloud)  
-**Start Here**: `exercises/day3_etl_analytics/README.md`
+**Start Here**: *(planned — `exercises/day3_etl_analytics/` not yet included)*
 
 ---
 
@@ -344,7 +344,7 @@ sql-tuning-playground/
    - Understand: Feature store pattern, materialized views
 
 2. **Hands-On** (90 min)
-   - Run: `exercises/day2_ml_optimization/README.md`
+   - Run: *(planned — `exercises/day2_ml_optimization/` not yet included)*
    - Implement: Feature store tables
    - Create: Materialized view for training
    - Measure: 1440x improvement (4h → 10s)
@@ -360,7 +360,7 @@ sql-tuning-playground/
    - Understand: Incremental loads, partitioning
 
 2. **Hands-On** (90 min)
-   - Run: `exercises/day3_etl_analytics/README.md`
+   - Run: *(planned — `exercises/day3_etl_analytics/` not yet included)*
    - Apply: Strategic indexes (2-3x speedup)
    - Implement: Incremental loading (4-6x speedup)
    - Configure: Partition filtering (10x speedup)
@@ -383,7 +383,7 @@ sql-tuning-playground/
    - Understand: When to use each optimization technique
 
 2. **Incident Simulations** (60 min)
-   - Run: `exercises/day3_incident_simulations/README.md`
+   - Run: *(planned — `exercises/day3_incident_simulations/` not yet included)*
    - Practice: Rapid diagnosis (5-minute scenarios)
    - Document: Troubleshooting approach for each
 
