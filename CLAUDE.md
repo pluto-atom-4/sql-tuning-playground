@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**sql-tuning-playground** is a hands-on learning project focused on SQL optimization techniques for shared web hosting environments. The curriculum covers three database systems (PostgreSQL 17, MySQL 8.0, Azure SQL) with emphasis on WordPress/LAMP stack bottlenecks and production incident scenarios.
+**sql-tuning-playground** is a hands-on learning project focused on SQL optimization techniques for shared web hosting environments. The curriculum covers three database systems (PostgreSQL 17, MariaDB, Azure SQL) with emphasis on WordPress/LAMP stack bottlenecks and production incident scenarios.
 
 **Duration:** 3-day intensive (following `docs/learning-plan.md`)  
 **Target:** Practical tuning techniques applicable to infrastructure supporting ~29K shared hosting sites  
-**Database Strategy:** Azure free-tier SQL for cloud exercises; local PostgreSQL for testing; MySQL for WordPress-specific optimization
+**Database Strategy:** Azure free-tier SQL for cloud exercises; local PostgreSQL + MariaDB via Docker Compose; all exercises use InnoDB-compatible configs (production MySQL 8.0 equivalent)
 
 ## Project Structure
 
@@ -60,17 +60,28 @@ psql -U postgres -d sql_tuning -f scripts/setup_postgres.sql
 psql -U postgres -d sql_tuning -c "SELECT * FROM wp_posts LIMIT 10;"
 ```
 
-### MySQL/WordPress (Local or remote)
-```bash
-# Connect locally
-mysql -u root -p sql_tuning
+### MariaDB/WordPress (Local Docker)
+Local MariaDB runs via `docker compose` (started with `make setup-local`).
 
-# Execute script
-mysql -u root -p sql_tuning < scripts/setup_mysql.sql
+```bash
+# Connect via Docker
+docker compose exec mysql mysql -u wordpress -pwordpress wordpress_test
+
+# Or, if MySQL client is installed locally
+mysql -h localhost -u wordpress -pwordpress -D wordpress_test
 
 # Run WordPress-specific diagnostic
-mysql -u root -p sql_tuning -e "SELECT SUM(LENGTH(option_value)) FROM wp_options WHERE autoload = 'yes';"
+docker compose exec mysql mysql -u wordpress -pwordpress wordpress_test -e "SELECT SUM(LENGTH(option_value)) FROM wp_options WHERE autoload = 'yes';"
+
+# Check slow query log
+docker compose exec mysql cat /config/log/slow-query.log
 ```
+
+**Container details:**
+- Image: `lscr.io/linuxserver/mariadb:latest` (compatible with MySQL 8.0 exercises)
+- Port: `3306:3306`
+- Data volume: `mysqldata:/config` (persistent across restarts)
+- Config file: mounted at `/config/custom.cnf` (includes tuning params: `innodb_buffer_pool_size=512M`, `max_connections=200`, slow query log)
 
 ## Key Learning Areas
 
@@ -81,9 +92,9 @@ mysql -u root -p sql_tuning -e "SELECT SUM(LENGTH(option_value)) FROM wp_options
 
 ### Day 2: Infrastructure & High Availability
 - **Read Replicas & Pooling:** Connection pool configuration (PgBouncer for PostgreSQL)
-- **Server Tuning:** Adjusting buffer pools, connection limits, and memory allocation
-- **Cloud Diagnostic:** Using Azure Query Performance Insight and MySQL slow query log
-- **Exercises:** Measure performance before/after tuning parameter changes
+- **Server Tuning:** Adjusting buffer pools, connection limits, and memory allocation (InnoDB `innodb_buffer_pool_size`, `max_connections`, slow query log)
+- **Cloud Diagnostic:** Using Azure Query Performance Insight for cloud-based SQL tuning
+- **Exercises:** Measure performance before/after tuning parameter changes (MariaDB slow query logs in local `/config/log/`)
 
 ### Day 3: Incident Scenarios
 - **Postmortem Drills:** Rapid diagnosis of slow queries in production
@@ -145,7 +156,7 @@ Store baseline and optimized results in exercise `results.txt` for comparison.
 ## Important Constraints & Conventions
 
 - **Idempotency:** All SQL scripts must use `IF NOT EXISTS` / `DROP IF EXISTS` and can be safely re-run
-- **No local Docker:** Use Azure free-tier SQL; local PostgreSQL/MySQL only for quick iteration
+- **Local Docker Setup:** `docker-compose.yml` provides PostgreSQL and MariaDB for rapid iteration. Start with `make setup-local`. Azure free-tier SQL is used only for cloud-specific exercises (Query Performance Insight, etc.)
 - **Azure Credentials:** Never commit connection strings; use environment variables:
   ```bash
   export AZURE_SQL_USER="<user>"
@@ -178,12 +189,15 @@ See `.claude/SETTINGS_GUIDE.md` for detailed configuration and examples.
 
 - **Connection timeout on Azure SQL:** Check firewall rules allow your IP
 - **PgBouncer pooling issues:** Use `SHOW POOLS` and `SHOW DATABASES` to debug
+- **MariaDB container won't start:** Check `docker compose logs mysql` for config errors. Common issues: `log_error_verbosity` (MySQL-only, use `log_warnings` in MariaDB), incorrect slow log path
 - **WordPress plugin conflicts:** Query Monitor plugin is safe for audit exercises; always test in isolated environment
-- **Index bloat over time:** Monitor with `SELECT * FROM pg_stat_user_indexes` (PostgreSQL) or `INFORMATION_SCHEMA.STATISTICS` (MySQL/Azure)
+- **Index bloat over time:** Monitor with `SELECT * FROM pg_stat_user_indexes` (PostgreSQL) or `SELECT * FROM INFORMATION_SCHEMA.STATISTICS` (MariaDB/Azure SQL)
 
 ## References
 
 - **PostgreSQL:** [Official tuning docs](https://www.postgresql.org/docs/current/performance-tips.html)
-- **MySQL:** [InnoDB optimization guide](https://dev.mysql.com/doc/refman/8.0/en/innodb-optimization.html)
+- **MariaDB:** [InnoDB optimization guide](https://mariadb.com/kb/en/library/optimization/) (local Docker image); exercises are compatible with MySQL 8.0 configs
+- **MySQL 8.0:** [InnoDB optimization guide](https://dev.mysql.com/doc/refman/8.0/en/innodb-optimization.html) (production target system for shared hosting)
 - **Azure SQL:** [Query Performance Insight documentation](https://learn.microsoft.com/en-us/azure/azure-sql/database/query-performance-insight-use)
 - **WordPress:** Query Monitor plugin for WP-specific diagnostics
+- **linuxserver/mariadb:** [Docker image documentation](https://docs.linuxserver.io/images/docker-mariadb/)
