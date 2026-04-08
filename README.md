@@ -149,7 +149,7 @@ LEFT JOIN (
   SELECT
     student_id,
     COUNT(DISTINCT assignment_id) AS assignments_completed,
-    AVG(assignment_score) AS avg_assignment_score
+    AVG(score) AS avg_assignment_score
   FROM course_assignments
   GROUP BY student_id
 ) a ON s.student_id = a.student_id
