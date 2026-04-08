@@ -103,9 +103,9 @@ FROM wp_postmeta WHERE post_id = 1;
 
 ```bash
 # `make load-all` (Step 2) already loads the ML schema + data into PostgreSQL.
-# To reload manually (e.g., after make clean-volumes):
-docker compose exec postgres psql -U postgres -d sql_tuning -f scripts/setup_ml_schema.sql
-docker compose exec postgres psql -U postgres -d sql_tuning -f scripts/setup_ml_test_data.sql
+# To reload manually (e.g., after make clean-volumes), stream the host files into psql:
+docker compose exec -T postgres psql -U postgres -d sql_tuning < scripts/setup_ml_schema.sql
+docker compose exec -T postgres psql -U postgres -d sql_tuning < scripts/setup_ml_test_data.sql
 ```
 
 **Step 4: Connect to PostgreSQL**
