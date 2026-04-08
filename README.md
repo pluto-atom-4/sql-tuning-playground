@@ -63,15 +63,18 @@ make test-mysql
 **Step 4: Baseline Performance (BEFORE optimization)**
 
 ```sql
--- How slow is the query NOW? (EXPLAIN ANALYZE executes the query and returns actual timings)
-EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
+-- How slow is the query NOW? (ANALYZE FORMAT=JSON shows optimizer estimates + actual runtime stats)
+ANALYZE FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value
 FROM wp_postmeta WHERE post_id = 1;
 
--- Expected:
+-- Expected output includes:
+-- select_type: SIMPLE (simple query, not JOIN or subquery)
+-- table: wp_postmeta
 -- type: ALL (full table scan - slow!)
+-- possible_keys: null (no index can be used)
+-- key: null (no index is being used)
 -- rows: ~5000 (estimated rows scanned)
--- r_rows: ~5000 (actual rows examined)
--- r_total_time_ms: ~250 (actual execution time)
+-- actual_rows: ~5000 (actual rows examined at runtime)
 ```
 
 **Step 5: Add the Magic Index**
@@ -83,14 +86,16 @@ ALTER TABLE wp_postmeta ADD INDEX idx_post_id_meta_key (post_id, meta_key(191));
 **Step 6: Verify Optimization (AFTER index)**
 
 ```sql
-EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
+ANALYZE FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value
 FROM wp_postmeta WHERE post_id = 1;
 
--- Expected:
+-- Expected output includes:
+-- select_type: SIMPLE
+-- table: wp_postmeta
 -- type: ref (index seek - fast!)
+-- key: idx_post_id_meta_key (using the composite index)
 -- rows: ~50 (estimated rows via index seek on post_id)
--- r_rows: ~50 (actual rows examined)
--- r_total_time_ms: ~5 ✨ (50x faster!)
+-- actual_rows: ~50 (actual rows examined - 100x fewer!) ✨
 ```
 
 **Next**: Read `exercises/day1_wordpress_audit/README.md` for full Day 1 curriculum

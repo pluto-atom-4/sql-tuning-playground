@@ -128,7 +128,7 @@ test-perf:
 	@echo ""
 	@echo "MariaDB (Path A) - WordPress wp_postmeta baseline (benefits from a composite index on post_id, meta_key):"
 	docker compose exec -T mysql mariadb -u wordpress -pwordpress wordpress_test -e \
-	  "EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value FROM wp_postmeta WHERE post_id = 1 AND meta_key = '_thumbnail_id' LIMIT 10;"
+	  "ANALYZE FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value FROM wp_postmeta WHERE post_id = 1 AND meta_key = '_thumbnail_id' LIMIT 10;"
 
 test-postgres:
 	@echo "Connecting to PostgreSQL..."
