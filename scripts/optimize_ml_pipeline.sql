@@ -2,18 +2,22 @@
 -- Machine Learning Feature Generation Optimization (Path B - PostgreSQL)
 -- ============================================================================
 -- Demonstrates three optimization strategies for ML feature generation
--- Baseline: 4 hours (full table scans computing all features)
--- Optimized: 10 seconds (feature store + materialized views)
--- => 1440x faster!
 --
--- Estimated execution time: 30-60 seconds (depends on data size)
+-- Demo dataset (test data loaded by setup_ml_test_data.sql):
+--   Script execution time: 30-60 seconds
+--   Baseline query time:   < 1 second (small dataset)
+--
+-- Production-scale dataset (10,000 students):
+--   Baseline query time:   3-4 hours (full table scans)
+--   Optimized query time:  10 seconds (feature store + materialized views)
+--   => 1440x faster!
 -- ============================================================================
 
 -- ============================================================================
 -- BASELINE PERFORMANCE (BEFORE OPTIMIZATION)
 -- ============================================================================
 -- This query generates all training features from raw student data
--- Expected baseline time: 3-4 hours on 10,000 students
+-- On the demo dataset this runs quickly; on 10,000 students expect 3-4 hours
 
 \echo '============================================================================='
 \echo 'BASELINE: Full feature generation without optimization'
