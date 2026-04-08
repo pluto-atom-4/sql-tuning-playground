@@ -124,7 +124,7 @@ test-perf:
 	@echo ""
 	@echo "PostgreSQL (Path B) - ML feature generation baseline (should be slow without optimization):"
 	docker compose exec -T postgres psql -U postgres -d sql_tuning -c \
-	  "EXPLAIN ANALYZE SELECT s.student_id, COUNT(DISTINCT ca.assignment_id) AS assignments_completed, AVG(ca.score) AS avg_score FROM student_enrollments s LEFT JOIN course_assignments ca ON s.student_id = ca.student_id GROUP BY s.student_id LIMIT 10;"
+	  "EXPLAIN ANALYZE SELECT s.student_id, COUNT(DISTINCT ca.assignment_id) AS assignments_completed, AVG(ca.score) AS avg_score FROM student_enrollments s LEFT JOIN course_assignments ca ON s.student_id = ca.student_id AND s.course_id = ca.course_id GROUP BY s.student_id LIMIT 10;"
 	@echo ""
 	@echo "MariaDB (Path A) - WordPress wp_postmeta baseline (benefits from a composite index on post_id, meta_key):"
 	docker compose exec -T mysql mariadb -u wordpress -pwordpress wordpress_test -e \
