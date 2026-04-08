@@ -46,6 +46,15 @@ sqlcmd -S your-server.database.windows.net -U user -P password -d wordpress_test
 Run these queries and note the execution time and "rows examined":
 
 **Query 1**: Get all metadata for a post
+
+**PostgreSQL**:
+```sql
+EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
+FROM wp_postmeta
+WHERE post_id = 1;
+```
+
+**MySQL/MariaDB**:
 ```sql
 EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
 FROM wp_postmeta
@@ -70,8 +79,19 @@ WHERE autoload = 'yes';
 - Every page load = 50KB transferred
 
 **Query 3**: Get published posts (homepage query)
+
+**PostgreSQL**:
 ```sql
 EXPLAIN ANALYZE SELECT ID, post_title, post_date
+FROM wp_posts
+WHERE post_status = 'publish' AND post_type = 'post'
+ORDER BY post_date DESC
+LIMIT 20;
+```
+
+**MySQL/MariaDB**:
+```sql
+EXPLAIN FORMAT=JSON SELECT ID, post_title, post_date
 FROM wp_posts
 WHERE post_status = 'publish' AND post_type = 'post'
 ORDER BY post_date DESC
@@ -127,9 +147,16 @@ ALTER TABLE wp_postmeta ADD INDEX idx_post_id_meta_key
 
 Re-run the same three queries and compare:
 
-**Query 1 (after index)**:
+**Query 1 (after index) - PostgreSQL**:
 ```sql
 EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
+FROM wp_postmeta
+WHERE post_id = 1;
+```
+
+**Query 1 (after index) - MySQL/MariaDB**:
+```sql
+EXPLAIN FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value
 FROM wp_postmeta
 WHERE post_id = 1;
 ```
