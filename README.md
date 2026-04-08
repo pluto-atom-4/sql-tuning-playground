@@ -70,7 +70,8 @@ FROM wp_postmeta WHERE post_id = 1;
 -- Expected:
 -- type: ALL (full table scan - slow!)
 -- rows: ~5000 (estimated rows scanned)
--- actual time: ~250ms
+-- r_rows: ~5000 (actual rows examined)
+-- r_total_time_ms: ~250 (actual execution time)
 ```
 
 **Step 5: Add the Magic Index**
@@ -87,8 +88,9 @@ FROM wp_postmeta WHERE post_id = 1;
 
 -- Expected:
 -- type: ref (index seek - fast!)
--- rows: ~50 (index seek on post_id)
--- actual time: ~5ms ✨ (50x faster!)
+-- rows: ~50 (estimated rows via index seek on post_id)
+-- r_rows: ~50 (actual rows examined)
+-- r_total_time_ms: ~5 ✨ (50x faster!)
 ```
 
 **Next**: Read `exercises/day1_wordpress_audit/README.md` for full Day 1 curriculum
@@ -104,8 +106,8 @@ FROM wp_postmeta WHERE post_id = 1;
 ```bash
 # `make load-all` (Step 2) already loads the ML schema + data into PostgreSQL.
 # To reload manually (e.g., after make clean-volumes):
-docker compose exec postgres psql -U postgres -d sql_tuning -f scripts/setup_ml_schema.sql
-docker compose exec postgres psql -U postgres -d sql_tuning -f scripts/setup_ml_test_data.sql
+docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d sql_tuning < scripts/setup_ml_schema.sql
+docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d sql_tuning < scripts/setup_ml_test_data.sql
 ```
 
 **Step 4: Connect to PostgreSQL**
