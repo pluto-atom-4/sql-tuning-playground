@@ -318,7 +318,7 @@ SELECT
   pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as table_size
 FROM pg_tables
 WHERE schemaname = 'public'
-  AND tablename LIKE 'student_%' OR tablename LIKE 'feature_%' OR tablename LIKE 'ml_%'
+  AND (tablename LIKE 'student_%' OR tablename LIKE 'feature_%' OR tablename LIKE 'ml_%')
 ORDER BY tablename;
 
 -- ============================================================================

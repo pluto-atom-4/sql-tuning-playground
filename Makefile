@@ -24,7 +24,7 @@ help:
 	@echo ""
 	@echo "SETUP (Choose One):"
 	@echo "  make setup-azure              Create Azure SQL database (free tier)"
-	@echo "  make setup-local              Start local Docker environment (PostgreSQL + MySQL)"
+	@echo "  make setup-local              Start local Docker environment (PostgreSQL + MariaDB)"
 	@echo ""
 	@echo "LOAD DATA:"
 	@echo "  make load-schema              Load WordPress schema (MariaDB) + ML schema (PostgreSQL)"
