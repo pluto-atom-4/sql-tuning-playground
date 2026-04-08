@@ -88,14 +88,14 @@ load-schema:
 	@echo "PostgreSQL:"
 	docker compose exec postgres psql -U postgres -d sql_tuning -f /docker-entrypoint-initdb.d/01-schema.sql 2>/dev/null || echo "Schema already loaded (first run auto-loads)"
 	@echo "MySQL:"
-	docker compose exec mysql mysql -u wordpress -p wordpress_test -e "SOURCE /docker-entrypoint-initdb.d/01-schema.sql" 2>/dev/null || echo "Schema already loaded"
+	docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test -e "SOURCE /docker-entrypoint-initdb.d/01-schema.sql" 2>/dev/null || echo "Schema already loaded"
 
 load-data:
 	@echo "Loading test data..."
 	@echo "PostgreSQL:"
 	docker compose exec postgres psql -U postgres -d sql_tuning -f /docker-entrypoint-initdb.d/02-data.sql 2>/dev/null || echo "Data already loaded"
 	@echo "MySQL:"
-	docker compose exec mysql mysql -u wordpress -p wordpress_test -e "SOURCE /docker-entrypoint-initdb.d/02-data.sql" 2>/dev/null || echo "Data already loaded"
+	docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test -e "SOURCE /docker-entrypoint-initdb.d/02-data.sql" 2>/dev/null || echo "Data already loaded"
 
 load-all: load-schema load-data
 	@echo "✓ Schema and data loaded"
@@ -109,13 +109,13 @@ optimize:
 	docker compose exec postgres psql -U postgres -d sql_tuning -f scripts/optimize_wordpress.sql
 	@echo ""
 	@echo "Running optimization on MySQL..."
-	docker compose exec mysql mysql -u wordpress -p wordpress_test -e "SOURCE scripts/optimize_wordpress.sql"
+	docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test -e "SOURCE scripts/optimize_wordpress.sql"
 
 optimize-postgres:
 	docker compose exec postgres psql -U postgres -d sql_tuning -f scripts/optimize_wordpress.sql
 
 optimize-mysql:
-	docker compose exec mysql mysql -u wordpress -p wordpress_test -e "SOURCE scripts/optimize_wordpress.sql"
+	docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test -e "SOURCE scripts/optimize_wordpress.sql"
 
 # ============================================================================
 # TESTING & PERFORMANCE
@@ -129,7 +129,7 @@ test-perf:
 	  "EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value FROM wp_postmeta WHERE post_id = 1 LIMIT 10;" || true
 	@echo ""
 	@echo "MySQL - BEFORE optimization (should be slow):"
-	docker compose exec mysql mysql -u wordpress -p wordpress_test -e \
+	docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test -e \
 	  "EXPLAIN FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value FROM wp_postmeta WHERE post_id = 1 LIMIT 10;" || true
 
 test-postgres:
@@ -138,7 +138,7 @@ test-postgres:
 
 test-mysql:
 	@echo "Connecting to MySQL..."
-	docker compose exec mysql mysql -u wordpress -p wordpress_test
+	docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test
 
 test-pgbouncer:
 	@echo "Testing PgBouncer connection pooling..."

@@ -134,6 +134,22 @@ WHERE autoload = 'yes';
 
 ### Step 1: Baseline Performance
 
+**PostgreSQL**:
+```sql
+-- How slow is it BEFORE optimization?
+EXPLAIN ANALYZE
+SELECT meta_id, post_id, meta_key, meta_value
+FROM wp_postmeta
+WHERE post_id = 1;
+
+-- Expected:
+-- Seq Scan on wp_postmeta (full table scan)
+-- Rows returned: 50
+-- Planning time: ~0.1ms
+-- Execution time: ~250ms
+```
+
+**MySQL/MariaDB**:
 ```sql
 -- How slow is it BEFORE optimization?
 EXPLAIN FORMAT=JSON
@@ -145,7 +161,7 @@ WHERE post_id = 1;
 -- Type: ALL (full table scan)
 -- Rows examined: 5000
 -- Rows returned: 50
--- Execution time: 250ms
+-- Execution time: ~250ms
 ```
 
 ### Step 2: Add Index
@@ -158,6 +174,20 @@ ALTER TABLE wp_postmeta ADD INDEX idx_post_id_meta_key
 
 ### Step 3: Measure After
 
+**PostgreSQL**:
+```sql
+EXPLAIN ANALYZE
+SELECT meta_id, post_id, meta_key, meta_value
+FROM wp_postmeta
+WHERE post_id = 1;
+
+-- Expected AFTER:
+-- Index Scan using idx_post_id_meta_key (index seek)
+-- Rows returned: 50
+-- Execution time: ~5ms (50x faster!)
+```
+
+**MySQL/MariaDB**:
 ```sql
 EXPLAIN FORMAT=JSON
 SELECT meta_id, post_id, meta_key, meta_value

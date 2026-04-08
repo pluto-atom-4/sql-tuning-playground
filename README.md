@@ -37,16 +37,28 @@ make load-all
 make test-mysql
 
 # 4. Run your first optimization
+# PostgreSQL:
 EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value 
 FROM wp_postmeta WHERE post_id = 1;
+
+# MySQL/MariaDB:
+EXPLAIN FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value 
+FROM wp_postmeta WHERE post_id = 1;
+
 # Expected: ~250ms, 5000 rows examined
 
 # 5. Add the magic index
 ALTER TABLE wp_postmeta ADD INDEX idx_post_id_meta_key (post_id, meta_key);
 
-# 6. Run again
+# 6. Run the same query again (fast!)
+# PostgreSQL:
 EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value 
 FROM wp_postmeta WHERE post_id = 1;
+
+# MySQL/MariaDB:
+EXPLAIN FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value 
+FROM wp_postmeta WHERE post_id = 1;
+
 # Expected: ~5ms, 50 rows examined ✨ (50x faster!)
 ```
 
