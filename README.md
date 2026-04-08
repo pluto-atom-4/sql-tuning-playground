@@ -104,7 +104,7 @@ FROM wp_postmeta WHERE post_id = 1;
 **Step 3: Load ML Schema & Test Data** (Required for Path B)
 
 ```bash
-# PostgreSQL loads WordPress schema by default, but Path B uses ML schema
+# Path B uses a dedicated ML schema (separate from the WordPress/MariaDB schema used by Path A)
 docker compose exec postgres psql -U postgres -d sql_tuning -f scripts/setup_ml_schema.sql
 docker compose exec postgres psql -U postgres -d sql_tuning -f scripts/setup_ml_test_data.sql
 ```
