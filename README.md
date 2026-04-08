@@ -171,7 +171,7 @@ LEFT JOIN (
 
 #### ✅ Success!
 
-You've just achieved **50x optimization** on the MariaDB/MySQL WordPress query and established a PostgreSQL baseline for Path B. Choose your path and continue with the exercises!
+You've added the MariaDB/MySQL WordPress query optimization and inspected the execution plan, and you've established a PostgreSQL baseline for Path B. To verify the full **50x** improvement target, run before/after timing as part of the exercises. Choose your path and continue!
 
 ### Option 2: Azure SQL (For Path C - ETL exercises)
 
