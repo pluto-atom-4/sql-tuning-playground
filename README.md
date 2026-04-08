@@ -78,7 +78,7 @@ FROM wp_postmeta WHERE post_id = 1;
 **Step 5: Add the Magic Index**
 
 ```sql
-ALTER TABLE wp_postmeta ADD INDEX idx_post_id_meta_key (post_id, meta_key);
+ALTER TABLE wp_postmeta ADD INDEX idx_post_id_meta_key (post_id, meta_key(191));
 ```
 
 **Step 6: Verify Optimization (AFTER index)**
