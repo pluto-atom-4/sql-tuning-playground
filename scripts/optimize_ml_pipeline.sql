@@ -15,9 +15,9 @@
 -- This query generates all training features from raw student data
 -- Expected baseline time: 3-4 hours on 10,000 students
 
-PRINT('=============================================================================');
-PRINT('BASELINE: Full feature generation without optimization');
-PRINT('=============================================================================');
+\echo '============================================================================='
+\echo 'BASELINE: Full feature generation without optimization'
+\echo '============================================================================='
 
 -- Baseline query: Compute all features by scanning raw tables
 -- This requires expensive aggregations and multiple joins
@@ -49,10 +49,10 @@ LIMIT 10;
 -- Impact: 2-3x speedup
 -- Creates indexes on frequently joined columns
 
-PRINT('');
-PRINT('=============================================================================');
-PRINT('OPTIMIZATION 1: Creating indexes on join and filter columns');
-PRINT('=============================================================================');
+\echo ''
+\echo '============================================================================='
+\echo 'OPTIMIZATION 1: Creating indexes on join and filter columns'
+\echo '============================================================================='
 
 -- Index on student_id for faster lookups in joins
 CREATE INDEX IF NOT EXISTS idx_student_enrollments_student_id_comp
@@ -76,7 +76,7 @@ ON study_groups(member_id);
 CREATE INDEX IF NOT EXISTS idx_collaborative_projects_student_id_comp
 ON collaborative_projects(student_id);
 
-PRINT('Indexes created for faster feature generation');
+\echo 'Indexes created for faster feature generation'
 
 -- ============================================================================
 -- OPTIMIZATION 2: FEATURE STORE PATTERN (Pre-computed Features)
@@ -84,10 +84,10 @@ PRINT('Indexes created for faster feature generation');
 -- Impact: 10-20x additional speedup (50x total from baseline)
 -- Creates pre-computed feature tables to avoid expensive aggregations
 
-PRINT('');
-PRINT('=============================================================================');
-PRINT('OPTIMIZATION 2: Creating pre-computed feature store');
-PRINT('=============================================================================');
+\echo ''
+\echo '============================================================================='
+\echo 'OPTIMIZATION 2: Creating pre-computed feature store'
+\echo '============================================================================='
 
 -- Feature Store Table 1: Student Enrollment Summary
 CREATE TABLE IF NOT EXISTS feature_enrollment_summary (
@@ -176,7 +176,7 @@ ON CONFLICT (student_id) DO UPDATE SET
   study_group_size = EXCLUDED.study_group_size,
   num_projects = EXCLUDED.num_projects;
 
-PRINT('Feature store tables populated');
+\echo 'Feature store tables populated'
 
 -- ============================================================================
 -- OPTIMIZATION 3: MATERIALIZED VIEW FOR ML TRAINING DATASET
@@ -184,10 +184,10 @@ PRINT('Feature store tables populated');
 -- Impact: 5-10x additional speedup (500x total from baseline)
 -- Creates pre-joined feature view ready for ML consumption
 
-PRINT('');
-PRINT('=============================================================================');
-PRINT('OPTIMIZATION 3: Creating materialized view for ML training');
-PRINT('=============================================================================');
+\echo ''
+\echo '============================================================================='
+\echo 'OPTIMIZATION 3: Creating materialized view for ML training'
+\echo '============================================================================='
 
 CREATE MATERIALIZED VIEW IF NOT EXISTS ml_training_dataset AS
 SELECT
@@ -214,16 +214,16 @@ LEFT JOIN feature_engagement fe ON fg.student_id = fe.student_id;
 -- Create index on materialized view for fast filtering
 CREATE UNIQUE INDEX IF NOT EXISTS idx_ml_training_student_id ON ml_training_dataset(student_id);
 
-PRINT('Materialized view ml_training_dataset created');
+\echo 'Materialized view ml_training_dataset created'
 
 -- ============================================================================
 -- OPTIMIZED FEATURE QUERY (Using Feature Store)
 -- ============================================================================
 
-PRINT('');
-PRINT('=============================================================================');
-PRINT('OPTIMIZED QUERY: Using feature store (10-50x faster)');
-PRINT('=============================================================================');
+\echo ''
+\echo '============================================================================='
+\echo 'OPTIMIZED QUERY: Using feature store (10-50x faster)'
+\echo '============================================================================='
 
 EXPLAIN ANALYZE
 SELECT *
@@ -236,12 +236,12 @@ LIMIT 10;
 -- COMBINED OPTIMIZATION STRATEGY
 -- ============================================================================
 
-PRINT('');
-PRINT('=============================================================================');
-PRINT('FINAL OPTIMIZED QUERY: All techniques combined');
-PRINT('=============================================================================');
-PRINT('Expected performance: 4 hours -> 10 seconds (1440x improvement)');
-PRINT('=============================================================================');
+\echo ''
+\echo '============================================================================='
+\echo 'FINAL OPTIMIZED QUERY: All techniques combined'
+\echo '============================================================================='
+\echo 'Expected performance: 4 hours -> 10 seconds (1440x improvement)'
+\echo '============================================================================='
 
 -- Ultra-optimized ML feature query:
 -- 1. Uses pre-computed feature store (no aggregations needed)
@@ -269,10 +269,10 @@ ORDER BY final_gpa DESC;
 -- INCREMENTAL FEATURE UPDATES
 -- ============================================================================
 
-PRINT('');
-PRINT('=============================================================================');
-PRINT('INCREMENTAL UPDATE: Refresh specific student features (for production)');
-PRINT('=============================================================================');
+\echo ''
+\echo '============================================================================='
+\echo 'INCREMENTAL UPDATE: Refresh specific student features (for production)'
+\echo '============================================================================='
 
 -- Function to update features for a specific student (for incremental ETL)
 CREATE OR REPLACE FUNCTION refresh_student_features(p_student_id INT)
@@ -301,16 +301,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-PRINT('Function refresh_student_features created for incremental updates');
+\echo 'Function refresh_student_features created for incremental updates'
 
 -- ============================================================================
 -- PERFORMANCE STATISTICS
 -- ============================================================================
 
-PRINT('');
-PRINT('=============================================================================');
-PRINT('INDEX AND TABLE STATISTICS');
-PRINT('=============================================================================');
+\echo ''
+\echo '============================================================================='
+\echo 'INDEX AND TABLE STATISTICS'
+\echo '============================================================================='
 
 SELECT
   schemaname,
@@ -325,43 +325,43 @@ ORDER BY tablename;
 -- RECOMMENDATIONS
 -- ============================================================================
 
-PRINT('');
-PRINT('=============================================================================');
-PRINT('OPTIMIZATION TECHNIQUES APPLIED (1440x speedup achieved)');
-PRINT('=============================================================================');
-PRINT('');
-PRINT('Technique 1: Strategic Indexing (2-3x speedup)');
-PRINT('  - Compound indexes on join columns (student_id, course_id)');
-PRINT('  - Included columns for covering indexes');
-PRINT('  - Eliminates expensive table lookups');
-PRINT('');
-PRINT('Technique 2: Feature Store Pattern (10-20x additional speedup)');
-PRINT('  - Pre-computed enrollment summary (num_courses, date ranges)');
-PRINT('  - Pre-computed academic performance (avg scores, completion rates)');
-PRINT('  - Pre-computed engagement (attendance, forum activity, study groups)');
-PRINT('  - Avoids expensive aggregations on raw data');
-PRINT('');
-PRINT('Technique 3: Materialized View (5-10x additional speedup)');
-PRINT('  - Pre-joined feature view ready for ML consumption');
-PRINT('  - Query directly from view (no joins or aggregations)');
-PRINT('  - Enables efficient filtering and ordering');
-PRINT('');
-PRINT('Combined Effect: 2-3x × 10-20x × 5-10x = ~1440x improvement');
-PRINT('  Baseline:  4 hours for full feature generation');
-PRINT('  Optimized: 10 seconds with feature store + materialized view');
-PRINT('');
-PRINT('=============================================================================');
-PRINT('PRODUCTION DEPLOYMENT STRATEGY');
-PRINT('=============================================================================');
-PRINT('');
-PRINT('Daily ETL Schedule:');
-PRINT('  1. Run incremental feature updates for new/updated students');
-PRINT('  2. Refresh materialized view (REFRESH MATERIALIZED VIEW CONCURRENTLY)');
-PRINT('  3. Training pipeline can read from ml_training_dataset');
-PRINT('');
-PRINT('Monitoring:');
-PRINT('  - Track view refresh time');
-PRINT('  - Monitor feature store staleness (max age acceptable)');
-PRINT('  - Alert if view becomes stale >1 hour');
-PRINT('');
-PRINT('=============================================================================';
+\echo ''
+\echo '============================================================================='
+\echo 'OPTIMIZATION TECHNIQUES APPLIED (1440x speedup achieved)'
+\echo '============================================================================='
+\echo ''
+\echo 'Technique 1: Strategic Indexing (2-3x speedup)'
+\echo '  - Compound indexes on join columns (student_id, course_id)'
+\echo '  - Included columns for covering indexes'
+\echo '  - Eliminates expensive table lookups'
+\echo ''
+\echo 'Technique 2: Feature Store Pattern (10-20x additional speedup)'
+\echo '  - Pre-computed enrollment summary (num_courses, date ranges)'
+\echo '  - Pre-computed academic performance (avg scores, completion rates)'
+\echo '  - Pre-computed engagement (attendance, forum activity, study groups)'
+\echo '  - Avoids expensive aggregations on raw data'
+\echo ''
+\echo 'Technique 3: Materialized View (5-10x additional speedup)'
+\echo '  - Pre-joined feature view ready for ML consumption'
+\echo '  - Query directly from view (no joins or aggregations)'
+\echo '  - Enables efficient filtering and ordering'
+\echo ''
+\echo 'Combined Effect: 2-3x × 10-20x × 5-10x = ~1440x improvement'
+\echo '  Baseline:  4 hours for full feature generation'
+\echo '  Optimized: 10 seconds with feature store + materialized view'
+\echo ''
+\echo '============================================================================='
+\echo 'PRODUCTION DEPLOYMENT STRATEGY'
+\echo '============================================================================='
+\echo ''
+\echo 'Daily ETL Schedule:'
+\echo '  1. Run incremental feature updates for new/updated students'
+\echo '  2. Refresh materialized view (REFRESH MATERIALIZED VIEW CONCURRENTLY)'
+\echo '  3. Training pipeline can read from ml_training_dataset'
+\echo ''
+\echo 'Monitoring:'
+\echo '  - Track view refresh time'
+\echo '  - Monitor feature store staleness (max age acceptable)'
+\echo '  - Alert if view becomes stale >1 hour'
+\echo ''
+\echo '============================================================================='

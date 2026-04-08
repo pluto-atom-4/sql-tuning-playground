@@ -104,13 +104,13 @@ load-all: load-schema load-data
 
 optimize:
 	@echo "Running ML pipeline optimization on PostgreSQL (Path B)..."
-	docker compose exec -T postgres psql -U postgres -d sql_tuning < scripts/optimize_ml_pipeline.sql
+	docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d sql_tuning < scripts/optimize_ml_pipeline.sql
 	@echo ""
 	@echo "Running WordPress optimization on MariaDB (Path A)..."
 	docker compose exec -T mysql mariadb -u wordpress -pwordpress wordpress_test < scripts/optimize_wordpress.sql
 
 optimize-postgres:
-	docker compose exec -T postgres psql -U postgres -d sql_tuning < scripts/optimize_ml_pipeline.sql
+	docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d sql_tuning < scripts/optimize_ml_pipeline.sql
 
 optimize-mysql:
 	docker compose exec -T mysql mariadb -u wordpress -pwordpress wordpress_test < scripts/optimize_wordpress.sql
