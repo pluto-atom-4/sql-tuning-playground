@@ -14,7 +14,7 @@ This project teaches practical SQL tuning across **three database systems** and 
 
 | Path | Database | Scenario | Improvement | Time |
 |------|----------|----------|-------------|------|
-| **A (Primary)** | MySQL | WordPress sites (29K user-facing) | 250ms → 5ms (50x) | 2-3 hrs |
+| **A (Primary)** | MariaDB (MySQL-compatible) | WordPress sites (29K user-facing) | 250ms → 5ms (50x) | 2-3 hrs |
 | **B (Secondary)** | PostgreSQL | ML feature generation | 4 hours → 10 sec (1440x) | 2-3 hrs |
 | **C (Optional)** | Azure SQL | ETL analytics pipelines | 6 hours → 3 min (120x) | 2-3 hrs |
 
@@ -228,17 +228,17 @@ sql-tuning-playground/
 │   ├── day3_etl_analytics/              # Path C exercises (ETL pipelines)
 │   └── day3_incident_simulations/       # All paths: Rapid diagnosis scenarios
 │
-├── docker-compose.yml           # Local database services (PostgreSQL, MySQL, PgBouncer)
+├── docker-compose.yml           # Local database services (PostgreSQL, MariaDB, PgBouncer)
 ├── Makefile                     # Automation targets (setup, load, test, optimize)
 └── config/
-    └── my.cnf                   # MySQL 8.0 configuration (learning environment tuning)
+    └── my.cnf                   # MariaDB/MySQL-compatible configuration (learning environment tuning)
 ```
 
 ---
 
 ## 🎓 Three Learning Paths
 
-### Path A: MySQL + WordPress (PRIMARY ⭐⭐⭐⭐⭐)
+### Path A: MariaDB (MySQL-compatible) + WordPress (PRIMARY ⭐⭐⭐⭐⭐)
 
 **Role Context**: You support 29K WordPress sites on a shared MySQL server. One slow query locks all 29K sites' users.
 
@@ -257,7 +257,7 @@ sql-tuning-playground/
 - 80% CPU → 20% CPU
 
 **Time**: 2-3 hours  
-**Database**: MySQL 8.0 (Docker)  
+**Database**: MariaDB (MySQL-compatible, Docker)  
 **Start Here**: `exercises/day1_wordpress_audit/README.md`
 
 ---
@@ -430,7 +430,7 @@ make docker-status       # Check container health
 make docker-clean        # Stop and remove containers
 
 # Testing & Optimization
-make test-mysql          # Connect to MySQL (WordPress)
+make test-mysql          # Connect to MariaDB (MySQL-compatible, WordPress)
 make test-postgres       # Connect to PostgreSQL (ML)
 make test-pgbouncer      # Test connection pooling
 make test-perf           # Run performance tests
@@ -451,9 +451,9 @@ docker compose down -v   # Stop containers and delete volumes (fresh start)
 
 ## ⚙️ Configuration
 
-### MySQL Configuration (`config/my.cnf`)
+### MariaDB/MySQL Configuration (`config/my.cnf`)
 
-The `config/my.cnf` file contains MySQL tuning parameters for the learning environment:
+The `config/my.cnf` file contains MariaDB/MySQL-compatible tuning parameters for the learning environment:
 
 ```ini
 innodb_buffer_pool_size = 512M  # InnoDB memory (critical for performance)
@@ -472,7 +472,7 @@ long_query_time = 1              # Log queries taking >1 second
 
 ## 📊 Database Connectivity
 
-### MySQL (Path A - WordPress)
+### MariaDB (Path A - WordPress)
 
 **Docker**:
 ```bash
@@ -583,7 +583,7 @@ By the end of this project, you should be able to:
 A: **Path A (WordPress) is primary** — that's your main responsibility in the role. Path B and C show you understand the full infrastructure. If time-constrained, do A → B. If you have time, do all three.
 
 **Q: Can I do this without Docker?**  
-A: Yes! Use Azure SQL for Path C (cloud-based). For Paths A & B, you need PostgreSQL and MySQL. Docker is fastest.
+A: Yes! Use Azure SQL for Path C (cloud-based). For Paths A & B, you need PostgreSQL and MariaDB (MySQL-compatible). Docker is fastest.
 
 **Q: How long is the interview?**  
 A: You'll have ~1 hour. Plan for: 10 min small talk, 20 min technical deep dive (they'll pick a path), 20 min questions, 10 min logistics.
