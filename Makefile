@@ -70,8 +70,8 @@ setup-local:
 	@echo ""
 	@echo "Waiting for databases to be healthy..."
 	@sleep 10
-	@docker compose exec postgres pg_isready -U postgres -d sql_tuning || echo "PostgreSQL starting..."
-	@docker compose exec mysql mysqladmin ping -h localhost || echo "MariaDB (MySQL-compatible) starting..."
+	@docker compose exec -T postgres pg_isready -U postgres -d sql_tuning || echo "PostgreSQL starting..."
+	@docker compose exec -T mysql mysqladmin ping -h localhost || echo "MariaDB (MySQL-compatible) starting..."
 	@echo ""
 	@echo "✓ Containers started!"
 	@echo ""
