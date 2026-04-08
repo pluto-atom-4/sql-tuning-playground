@@ -124,7 +124,7 @@ make test-postgres
 \dt  -- List all tables (you should see student_enrollments, course_assignments, final_grades, etc.)
 
 -- Count records
-SELECT COUNT(*) as total_students FROM student_enrollments;
+SELECT COUNT(*) as total_enrollments FROM student_enrollments;
 SELECT COUNT(*) as total_assignments FROM course_assignments;
 SELECT COUNT(*) as total_grades FROM final_grades;
 ```
