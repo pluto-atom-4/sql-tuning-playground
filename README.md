@@ -41,11 +41,9 @@ make docker-status
 **Step 2: Load Local Exercise Data** (2 minutes)
 
 ```bash
-# Load the local WordPress dataset used by the Docker environment:
-# - WordPress schema + test data for MariaDB (Path A)
-# - WordPress schema + test data for PostgreSQL (local Docker only)
-# Note: `make load-all` does not load the ML schema/data for Path B exercises.
-# Path B users should still run the ML schema/data commands in the PostgreSQL section below.
+# Loads all local exercise data:
+# - WordPress schema + test data into MariaDB (Path A)
+# - ML schema + test data into PostgreSQL (Path B)
 make load-all
 ```
 
@@ -101,10 +99,11 @@ FROM wp_postmeta WHERE post_id = 1;
 
 **Objective**: Learn PostgreSQL optimization for ML feature generation pipelines
 
-**Step 3: Load ML Schema & Test Data** (Required for Path B)
+**Step 3: Load ML Schema & Test Data** (Already done if you ran `make load-all` in Step 2)
 
 ```bash
-# Path B uses a dedicated ML schema (separate from the WordPress/MariaDB schema used by Path A)
+# `make load-all` (Step 2) already loads the ML schema + data into PostgreSQL.
+# To reload manually (e.g., after make clean-volumes):
 docker compose exec postgres psql -U postgres -d sql_tuning -f scripts/setup_ml_schema.sql
 docker compose exec postgres psql -U postgres -d sql_tuning -f scripts/setup_ml_test_data.sql
 ```

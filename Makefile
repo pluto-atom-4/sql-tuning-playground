@@ -84,18 +84,16 @@ setup-local:
 # ============================================================================
 
 load-schema:
-	@echo "Loading WordPress schema..."
-	@echo "PostgreSQL:"
-	docker compose exec -T postgres psql -U postgres -d sql_tuning < scripts/setup_wordpress_schema.sql
-	@echo "MySQL:"
+	@echo "Loading WordPress schema into MariaDB (Path A)..."
 	docker compose exec -T mysql mariadb -u wordpress -pwordpress wordpress_test < scripts/setup_wordpress_schema.sql
+	@echo "Loading ML schema into PostgreSQL (Path B)..."
+	docker compose exec -T postgres psql -U postgres -d sql_tuning < scripts/setup_ml_schema.sql
 
 load-data:
-	@echo "Loading test data..."
-	@echo "PostgreSQL:"
-	docker compose exec -T postgres psql -U postgres -d sql_tuning < scripts/setup_test_data.sql
-	@echo "MySQL:"
+	@echo "Loading WordPress test data into MariaDB (Path A)..."
 	docker compose exec -T mysql mariadb -u wordpress -pwordpress wordpress_test < scripts/setup_test_data.sql
+	@echo "Loading ML test data into PostgreSQL (Path B)..."
+	docker compose exec -T postgres psql -U postgres -d sql_tuning < scripts/setup_ml_test_data.sql
 
 load-all: load-schema load-data
 	@echo "✓ Schema and data loaded"
