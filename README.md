@@ -41,9 +41,10 @@ make docker-status
 **Step 2: Load Local Exercise Data** (2 minutes)
 
 ```bash
-# Load all local datasets used by the Docker environment:
+# Load the local WordPress dataset used by the Docker environment:
 # - WordPress schema + test data for MariaDB (Path A)
-# - PostgreSQL schema + test data for Path B exercises
+# Note: `make load-all` does not load the ML schema/data for Path B exercises.
+# Path B users should run the ML schema/data commands in the PostgreSQL section below.
 make load-all
 ```
 
