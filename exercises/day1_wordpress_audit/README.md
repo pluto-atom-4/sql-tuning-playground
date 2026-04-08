@@ -56,7 +56,7 @@ WHERE post_id = 1;
 
 **MySQL/MariaDB**:
 ```sql
-EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
+ANALYZE FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value
 FROM wp_postmeta
 WHERE post_id = 1;
 ```
@@ -156,7 +156,7 @@ WHERE post_id = 1;
 
 **Query 1 (after index) - MySQL/MariaDB**:
 ```sql
-EXPLAIN FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value
+ANALYZE FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value
 FROM wp_postmeta
 WHERE post_id = 1;
 ```

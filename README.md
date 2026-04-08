@@ -14,7 +14,7 @@ This project teaches practical SQL tuning across **three database systems** and 
 
 | Path | Database | Scenario | Improvement | Time |
 |------|----------|----------|-------------|------|
-| **A (Primary)** | MySQL | WordPress sites (29K user-facing) | 250ms → 5ms (50x) | 2-3 hrs |
+| **A (Primary)** | MariaDB (MySQL-compatible) | WordPress sites (29K user-facing) | 250ms → 5ms (50x) | 2-3 hrs |
 | **B (Secondary)** | PostgreSQL | ML feature generation | 4 hours → 10 sec (1440x) | 2-3 hrs |
 | **C (Optional)** | Azure SQL | ETL analytics pipelines | 6 hours → 3 min (120x) | 2-3 hrs |
 
@@ -26,49 +26,148 @@ All three paths teach the same core skill: **diagnosing slow queries and fixing 
 
 ### Option 1: Local Docker (Recommended for Paths A & B)
 
+#### Common Steps (Applies to All Paths)
+
+**Step 1: Start All Containers** (2 minutes)
+
 ```bash
-# 1. Start containers (PostgreSQL, MySQL, PgBouncer)
+# Start PostgreSQL (Port 5432), MariaDB (Port 3306), and PgBouncer (Port 6432)
 make setup-local
 
-# 2. Load all data
+# Verify all containers are healthy
+make docker-status
+```
+
+**Step 2: Load Local Exercise Data** (2 minutes)
+
+```bash
+# Loads all local exercise data:
+# - WordPress schema + test data into MariaDB (Path A)
+# - ML schema + test data into PostgreSQL (Path B)
 make load-all
 ```
 
-**PostgreSQL path** (run inside `make test-postgres`):
-```sql
--- 3. Connect: make test-postgres
+---
 
--- 4. Run your first optimization (baseline)
-EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
-FROM wp_postmeta WHERE post_id = 1;
--- Expected: ~250ms, 5000 rows examined (full table scan)
+#### MariaDB Section (Path A - WordPress Optimization)
 
--- 5. Add the magic index
-CREATE INDEX idx_post_id_meta_key ON wp_postmeta (post_id, meta_key);
+**Objective**: Fix a slow WordPress query from 250ms → 5ms (50x faster)
 
--- 6. Run the same query again (fast!)
-EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
-FROM wp_postmeta WHERE post_id = 1;
--- Expected: ~5ms, 50 rows examined ✨ (50x faster!)
+**Step 3: Connect to MariaDB**
+
+```bash
+make test-mysql
+# Or manually: docker compose exec mysql mariadb -u wordpress -pwordpress wordpress_test
 ```
 
-**MySQL/MariaDB path** (run inside `make test-mysql`):
+**Step 4: Baseline Performance (BEFORE optimization)**
+
 ```sql
--- 3. Connect: make test-mysql
-
--- 4. Run your first optimization (baseline)
-EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
+-- How slow is the query NOW? (ANALYZE FORMAT=JSON shows optimizer estimates + actual runtime stats)
+ANALYZE FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value
 FROM wp_postmeta WHERE post_id = 1;
--- Expected: ~250ms, 5000 rows examined (full table scan)
 
--- 5. Add the magic index
-ALTER TABLE wp_postmeta ADD INDEX idx_post_id_meta_key (post_id, meta_key);
-
--- 6. Run the same query again (fast!)
-EXPLAIN ANALYZE SELECT meta_id, post_id, meta_key, meta_value
-FROM wp_postmeta WHERE post_id = 1;
--- Expected: ~5ms, 50 rows examined ✨ (50x faster!)
+-- Expected output includes:
+-- r_rows: ~5000 (actual rows examined — full table scan)
+-- r_total_time_ms: ~250 (execution time before index)
 ```
+
+**Step 5: Add the Magic Index**
+
+```sql
+ALTER TABLE wp_postmeta ADD INDEX idx_post_id_meta_key (post_id, meta_key(191));
+```
+
+**Step 6: Verify Optimization (AFTER index)**
+
+```sql
+ANALYZE FORMAT=JSON SELECT meta_id, post_id, meta_key, meta_value
+FROM wp_postmeta WHERE post_id = 1;
+
+-- Expected output includes:
+-- r_rows: ~50 (actual rows examined via index seek — 100x fewer!) ✨
+-- r_total_time_ms: ~5 (execution time after index)
+```
+
+**Next**: Read `exercises/day1_wordpress_audit/README.md` for full Day 1 curriculum
+
+---
+
+#### PostgreSQL Section (Path B - Machine Learning)
+
+**Objective**: Learn PostgreSQL optimization for ML feature generation pipelines
+
+**Step 3: Load ML Schema & Test Data** (Already done if you ran `make load-all` in Step 2)
+
+```bash
+# `make load-all` (Step 2) already loads the ML schema + data into PostgreSQL.
+# To reload manually (e.g., after make clean-volumes):
+docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d sql_tuning < scripts/setup_ml_schema.sql
+docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U postgres -d sql_tuning < scripts/setup_ml_test_data.sql
+```
+
+**Step 4: Connect to PostgreSQL**
+
+```bash
+make test-postgres
+# Or manually: docker compose exec postgres psql -U postgres -d sql_tuning
+```
+
+**Step 5: Explore ML Feature Generation Tables**
+
+```sql
+-- Check the ML tables
+\dt  -- List all tables (you should see student_enrollments, course_assignments, final_grades, etc.)
+
+-- Count records
+SELECT COUNT(*) as total_enrollments FROM student_enrollments;
+SELECT COUNT(*) as total_assignments FROM course_assignments;
+SELECT COUNT(*) as total_grades FROM final_grades;
+```
+
+**Step 6: Run a Baseline ML Query** (Feature generation - BEFORE optimization)
+
+```sql
+-- This is a typical feature generation query for ML training
+-- It is intentionally unoptimized because it computes aggregates at query time
+-- across large tables instead of reading from a precomputed feature store
+EXPLAIN ANALYZE
+SELECT
+  s.student_id,
+  COALESCE(a.assignments_completed, 0) AS assignments_completed,
+  a.avg_assignment_score,
+  COALESCE(e.courses_enrolled, 0) AS courses_enrolled
+FROM (
+  SELECT DISTINCT student_id
+  FROM student_enrollments
+) s
+LEFT JOIN (
+  SELECT
+    student_id,
+    COUNT(DISTINCT assignment_id) AS assignments_completed,
+    AVG(score) AS avg_assignment_score
+  FROM course_assignments
+  GROUP BY student_id
+) a ON s.student_id = a.student_id
+LEFT JOIN (
+  SELECT
+    student_id,
+    COUNT(DISTINCT course_id) AS courses_enrolled
+  FROM student_enrollments
+  GROUP BY student_id
+) e ON s.student_id = e.student_id;
+
+-- Expected: Slower baseline due to repeated aggregation over large tables;
+-- later optimization should use pre-aggregation/materialized views, not "missing join indexes"
+```
+
+**Next**: Path B exercise files are not yet included in this repo. For now, use the PostgreSQL baseline above to practice feature-generation analysis. There is currently no `exercises/day2_ml_optimization/` directory in this repository.
+
+---
+
+#### ✅ Success!
+
+You've added the MariaDB/MySQL WordPress query optimization and inspected the execution plan, and you've established a PostgreSQL baseline for Path B. To verify the full **50x** improvement target, run before/after timing as part of the exercises. Choose your path and continue!
 
 ### Option 2: Azure SQL (For Path C - ETL exercises)
 
@@ -121,21 +220,21 @@ sql-tuning-playground/
 │
 ├── exercises/
 │   ├── day1_wordpress_audit/            # Path A exercises (WordPress optimization)
-│   ├── day2_ml_optimization/            # Path B exercises (ML feature generation)
-│   ├── day3_etl_analytics/              # Path C exercises (ETL pipelines)
-│   └── day3_incident_simulations/       # All paths: Rapid diagnosis scenarios
+│   ├── day2_ml_optimization/            # (planned) Path B exercises (ML feature generation)
+│   ├── day3_etl_analytics/              # (planned) Path C exercises (ETL pipelines)
+│   └── day3_incident_simulations/       # (planned) All paths: Rapid diagnosis scenarios
 │
-├── docker-compose.yml           # Local database services (PostgreSQL, MySQL, PgBouncer)
+├── docker-compose.yml           # Local database services (PostgreSQL, MariaDB, PgBouncer)
 ├── Makefile                     # Automation targets (setup, load, test, optimize)
 └── config/
-    └── my.cnf                   # MySQL 8.0 configuration (learning environment tuning)
+    └── my.cnf                   # MariaDB/MySQL-compatible configuration (learning environment tuning)
 ```
 
 ---
 
 ## 🎓 Three Learning Paths
 
-### Path A: MySQL + WordPress (PRIMARY ⭐⭐⭐⭐⭐)
+### Path A: MariaDB (MySQL-compatible) + WordPress (PRIMARY ⭐⭐⭐⭐⭐)
 
 **Role Context**: You support 29K WordPress sites on a shared MySQL server. One slow query locks all 29K sites' users.
 
@@ -154,7 +253,7 @@ sql-tuning-playground/
 - 80% CPU → 20% CPU
 
 **Time**: 2-3 hours  
-**Database**: MySQL 8.0 (Docker)  
+**Database**: MariaDB (MySQL-compatible, Docker)  
 **Start Here**: `exercises/day1_wordpress_audit/README.md`
 
 ---
@@ -178,7 +277,7 @@ sql-tuning-playground/
 
 **Time**: 2-3 hours  
 **Database**: PostgreSQL 17 (Docker)  
-**Start Here**: `exercises/day2_ml_optimization/README.md`
+**Start Here**: *(planned — `exercises/day2_ml_optimization/` not yet included)*
 
 ---
 
@@ -201,7 +300,7 @@ sql-tuning-playground/
 
 **Time**: 2-3 hours  
 **Database**: Azure SQL (Cloud)  
-**Start Here**: `exercises/day3_etl_analytics/README.md`
+**Start Here**: *(planned — `exercises/day3_etl_analytics/` not yet included)*
 
 ---
 
@@ -241,7 +340,7 @@ sql-tuning-playground/
    - Understand: Feature store pattern, materialized views
 
 2. **Hands-On** (90 min)
-   - Run: `exercises/day2_ml_optimization/README.md`
+   - Run: *(planned — `exercises/day2_ml_optimization/` not yet included)*
    - Implement: Feature store tables
    - Create: Materialized view for training
    - Measure: 1440x improvement (4h → 10s)
@@ -257,7 +356,7 @@ sql-tuning-playground/
    - Understand: Incremental loads, partitioning
 
 2. **Hands-On** (90 min)
-   - Run: `exercises/day3_etl_analytics/README.md`
+   - Run: *(planned — `exercises/day3_etl_analytics/` not yet included)*
    - Apply: Strategic indexes (2-3x speedup)
    - Implement: Incremental loading (4-6x speedup)
    - Configure: Partition filtering (10x speedup)
@@ -280,7 +379,7 @@ sql-tuning-playground/
    - Understand: When to use each optimization technique
 
 2. **Incident Simulations** (60 min)
-   - Run: `exercises/day3_incident_simulations/README.md`
+   - Run: *(planned — `exercises/day3_incident_simulations/` not yet included)*
    - Practice: Rapid diagnosis (5-minute scenarios)
    - Document: Troubleshooting approach for each
 
@@ -327,7 +426,7 @@ make docker-status       # Check container health
 make docker-clean        # Stop and remove containers
 
 # Testing & Optimization
-make test-mysql          # Connect to MySQL (WordPress)
+make test-mysql          # Connect to MariaDB (MySQL-compatible, WordPress)
 make test-postgres       # Connect to PostgreSQL (ML)
 make test-pgbouncer      # Test connection pooling
 make test-perf           # Run performance tests
@@ -348,9 +447,9 @@ docker compose down -v   # Stop containers and delete volumes (fresh start)
 
 ## ⚙️ Configuration
 
-### MySQL Configuration (`config/my.cnf`)
+### MariaDB/MySQL Configuration (`config/my.cnf`)
 
-The `config/my.cnf` file contains MySQL tuning parameters for the learning environment:
+The `config/my.cnf` file contains MariaDB/MySQL-compatible tuning parameters for the learning environment:
 
 ```ini
 innodb_buffer_pool_size = 512M  # InnoDB memory (critical for performance)
@@ -369,7 +468,7 @@ long_query_time = 1              # Log queries taking >1 second
 
 ## 📊 Database Connectivity
 
-### MySQL (Path A - WordPress)
+### MariaDB (Path A - WordPress)
 
 **Docker**:
 ```bash
@@ -480,7 +579,7 @@ By the end of this project, you should be able to:
 A: **Path A (WordPress) is primary** — that's your main responsibility in the role. Path B and C show you understand the full infrastructure. If time-constrained, do A → B. If you have time, do all three.
 
 **Q: Can I do this without Docker?**  
-A: Yes! Use Azure SQL for Path C (cloud-based). For Paths A & B, you need PostgreSQL and MySQL. Docker is fastest.
+A: Yes! Use Azure SQL for Path C (cloud-based). For Paths A & B, you need PostgreSQL and MariaDB (MySQL-compatible). Docker is fastest.
 
 **Q: How long is the interview?**  
 A: You'll have ~1 hour. Plan for: 10 min small talk, 20 min technical deep dive (they'll pick a path), 20 min questions, 10 min logistics.
