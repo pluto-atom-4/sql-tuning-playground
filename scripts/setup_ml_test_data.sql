@@ -16,6 +16,7 @@
 
 -- ============================================================================
 -- 1. INSERT STUDENT ENROLLMENTS
+TRUNCATE TABLE student_enrollments;
 -- ============================================================================
 
 INSERT INTO student_enrollments (student_id, course_id, enrollment_date, graduation_year)
@@ -34,6 +35,7 @@ WHERE random() < 0.67;  -- ~10 courses per student (100K / 10K = 10)
 
 -- ============================================================================
 -- 2. INSERT COURSE ASSIGNMENTS
+TRUNCATE TABLE course_assignments;
 -- ============================================================================
 
 INSERT INTO course_assignments (student_id, course_id, assignment_date, submission_date, score, max_score)
@@ -51,6 +53,7 @@ CROSS JOIN (
 
 -- ============================================================================
 -- 3. INSERT STUDENT ENGAGEMENT
+TRUNCATE TABLE student_engagement;
 -- ============================================================================
 
 INSERT INTO student_engagement (student_id, timestamp, attendance_rate, assignment_completion_rate, online_module_completed, forum_posts)
@@ -65,6 +68,7 @@ FROM student_enrollments se;
 
 -- ============================================================================
 -- 4. INSERT STUDY GROUPS
+TRUNCATE TABLE study_groups;
 -- ============================================================================
 
 INSERT INTO study_groups (member_id, study_group_member_id, group_formation_date)
@@ -80,6 +84,7 @@ WHERE random() < 0.30;  -- 30% of possible pairs form study groups
 
 -- ============================================================================
 -- 5. INSERT COLLABORATIVE PROJECTS
+TRUNCATE TABLE collaborative_projects;
 -- ============================================================================
 
 INSERT INTO collaborative_projects (student_id, collaborative_project_id, completion_status, contribution_score)
@@ -93,14 +98,16 @@ WHERE random() < 0.50;  -- 50% of students in collaborative projects
 
 -- ============================================================================
 -- 6. INSERT FINAL GRADES
+TRUNCATE TABLE final_grades;
 -- ============================================================================
 
 INSERT INTO final_grades (student_id, final_gpa, graduation_date)
 SELECT
-  DISTINCT se.student_id,
+  se.student_id,
   ROUND((2.0 + random() * 2.0)::NUMERIC, 2) as final_gpa,
-  make_date(se.graduation_year, 5, 15) as graduation_date
-FROM student_enrollments se;
+  make_date(MAX(se.graduation_year), 5, 15) as graduation_date
+FROM student_enrollments se
+GROUP BY se.student_id;
 
 -- ============================================================================
 -- SUMMARY & VERIFICATION
