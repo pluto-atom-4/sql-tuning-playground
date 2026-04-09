@@ -16,24 +16,24 @@ CREATE TABLE IF NOT EXISTS wp_posts (
   post_author BIGINT UNSIGNED NOT NULL DEFAULT 0,
   post_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   post_date_gmt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  post_content LONGTEXT NOT NULL,
-  post_title TEXT NOT NULL,
-  post_excerpt TEXT NOT NULL,
+  post_content LONGTEXT NOT NULL DEFAULT '',
+  post_title TEXT NOT NULL DEFAULT '',
+  post_excerpt TEXT NOT NULL DEFAULT '',
   post_status VARCHAR(20) NOT NULL DEFAULT 'draft',
   comment_status VARCHAR(20) NOT NULL DEFAULT 'open',
   ping_status VARCHAR(20) NOT NULL DEFAULT 'open',
-  post_password VARCHAR(255) NOT NULL,
-  post_name VARCHAR(200) NOT NULL,
-  to_ping TEXT NOT NULL,
-  pinged TEXT NOT NULL,
+  post_password VARCHAR(255) NOT NULL DEFAULT '',
+  post_name VARCHAR(200) NOT NULL DEFAULT '',
+  to_ping TEXT NOT NULL DEFAULT '',
+  pinged TEXT NOT NULL DEFAULT '',
   post_modified DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   post_modified_gmt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  post_content_filtered LONGTEXT NOT NULL,
+  post_content_filtered LONGTEXT NOT NULL DEFAULT '',
   post_parent BIGINT UNSIGNED NOT NULL DEFAULT 0,
-  guid VARCHAR(255) NOT NULL,
+  guid VARCHAR(255) NOT NULL DEFAULT '',
   menu_order INT NOT NULL DEFAULT 0,
   post_type VARCHAR(20) NOT NULL DEFAULT 'post',
-  post_mime_type VARCHAR(100) NOT NULL,
+  post_mime_type VARCHAR(100) NOT NULL DEFAULT '',
   comment_count BIGINT NOT NULL DEFAULT 0,
   KEY post_author (post_author),
   KEY post_status_post_type (post_status, post_type),
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS wp_postmeta (
 CREATE TABLE IF NOT EXISTS wp_options (
   option_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   option_name VARCHAR(191) NOT NULL UNIQUE,
-  option_value LONGTEXT NOT NULL,
+  option_value LONGTEXT NOT NULL DEFAULT '',
   autoload VARCHAR(20) NOT NULL DEFAULT 'yes',
   KEY autoload (autoload)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -67,17 +67,17 @@ CREATE TABLE IF NOT EXISTS wp_options (
 CREATE TABLE IF NOT EXISTS wp_comments (
   comment_ID BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   comment_post_ID BIGINT UNSIGNED NOT NULL DEFAULT 0,
-  comment_author TEXT NOT NULL,
-  comment_author_email VARCHAR(100) NOT NULL,
-  comment_author_URL VARCHAR(200) NOT NULL,
-  comment_author_IP VARCHAR(100) NOT NULL,
+  comment_author TEXT NOT NULL DEFAULT '',
+  comment_author_email VARCHAR(100) NOT NULL DEFAULT '',
+  comment_author_URL VARCHAR(200) NOT NULL DEFAULT '',
+  comment_author_IP VARCHAR(100) NOT NULL DEFAULT '',
   comment_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   comment_date_gmt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  comment_content TEXT NOT NULL,
+  comment_content TEXT NOT NULL DEFAULT '',
   comment_karma INT NOT NULL DEFAULT 0,
   comment_approved VARCHAR(20) NOT NULL DEFAULT '1',
-  comment_agent VARCHAR(255) NOT NULL,
-  comment_type VARCHAR(20) NOT NULL,
+  comment_agent VARCHAR(255) NOT NULL DEFAULT '',
+  comment_type VARCHAR(20) NOT NULL DEFAULT '',
   comment_parent BIGINT UNSIGNED NOT NULL DEFAULT 0,
   user_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
   KEY comment_post_ID (comment_post_ID),
@@ -85,21 +85,19 @@ CREATE TABLE IF NOT EXISTS wp_comments (
   KEY comment_approved (comment_approved)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Users
+-- Users (FIXED: Removed duplicate KEY user_login and KEY user_email)
 CREATE TABLE IF NOT EXISTS wp_users (
   ID BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   user_login VARCHAR(60) NOT NULL UNIQUE,
-  user_pass VARCHAR(255) NOT NULL,
-  user_nicename VARCHAR(50) NOT NULL,
-  user_email VARCHAR(100) NOT NULL UNIQUE,
-  user_url VARCHAR(100) NOT NULL,
-  user_registered DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  user_activation_key VARCHAR(255) NOT NULL,
-  user_status INT NOT NULL DEFAULT 0,
-  display_name VARCHAR(250) NOT NULL,
-  KEY user_login (user_login),
+  user_pass VARCHAR(255) NOT NULL DEFAULT '',
+  user_nicename VARCHAR(50) NOT NULL DEFAULT '',
   KEY user_nicename (user_nicename),
-  KEY user_email (user_email)
+  user_email VARCHAR(100) NOT NULL UNIQUE,
+  user_url VARCHAR(100) NOT NULL DEFAULT '',
+  user_registered DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  user_activation_key VARCHAR(255) NOT NULL DEFAULT '',
+  user_status INT NOT NULL DEFAULT 0,
+  display_name VARCHAR(250) NOT NULL DEFAULT ''
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- User metadata
@@ -112,22 +110,21 @@ CREATE TABLE IF NOT EXISTS wp_usermeta (
   KEY meta_key (meta_key(191))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Taxonomies (categories, tags)
+-- Taxonomies (categories, tags) (FIXED: Removed duplicate KEY slug)
 CREATE TABLE IF NOT EXISTS wp_terms (
   term_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(200) NOT NULL,
-  slug VARCHAR(200) NOT NULL UNIQUE,
-  term_group BIGINT NOT NULL DEFAULT 0,
+  name VARCHAR(200) NOT NULL DEFAULT '',
   KEY name (name),
-  KEY slug (slug)
+  slug VARCHAR(200) NOT NULL UNIQUE,
+  term_group BIGINT NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Taxonomy taxonomy (post_tag, category, etc.)
 CREATE TABLE IF NOT EXISTS wp_term_taxonomy (
   term_taxonomy_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   term_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
-  taxonomy VARCHAR(32) NOT NULL,
-  description LONGTEXT NOT NULL,
+  taxonomy VARCHAR(32) NOT NULL DEFAULT '',
+  description LONGTEXT NOT NULL DEFAULT '',
   parent BIGINT UNSIGNED NOT NULL DEFAULT 0,
   count BIGINT NOT NULL DEFAULT 0,
   KEY term_id (term_id),
@@ -148,7 +145,7 @@ CREATE TABLE IF NOT EXISTS wp_term_relationships (
 -- ============================================================================
 -- SUMMARY
 -- ============================================================================
--- Tables created: 8 (wp_posts, wp_postmeta, wp_options, wp_comments, wp_users,
+-- Tables created: 9 (wp_posts, wp_postmeta, wp_options, wp_comments, wp_users,
 --                    wp_usermeta, wp_terms, wp_term_taxonomy, wp_term_relationships)
 -- Schema size: <1MB
 -- Estimated test data size: 10-50MB (after loading sample data)
@@ -158,3 +155,4 @@ CREATE TABLE IF NOT EXISTS wp_term_relationships (
 -- 2. Run: EXPLAIN queries in exercises/day1_wordpress_audit/ to see full table scans
 -- 3. Optimize: Add missing indexes (the main learning exercise)
 -- ============================================================================
+
