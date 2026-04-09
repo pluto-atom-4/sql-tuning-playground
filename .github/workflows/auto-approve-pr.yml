@@ -8,7 +8,7 @@ jobs:
   approve:
     runs-on: ubuntu-latest
     # Only auto-approve PRs created by YOUR personal account
-    if: github.actor == 'your-github-username'
+    if: github.actor == 'pluto-atom-4'
     steps:
       - name: Approve PR
         uses: actions/github-script@v6
