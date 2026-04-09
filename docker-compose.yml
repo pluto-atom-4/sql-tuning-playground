@@ -26,13 +26,15 @@ services:
   postgres:
     image: postgres:17-alpine
     container_name: sql-tuning-postgres
+    # This forces Postgres to listen on the network interface, not just Unix sockets
+    command: ["postgres", "-c", "listen_addresses=*"]
     environment:
       POSTGRES_DB: sql_tuning
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_INITDB_ARGS: "-c shared_buffers=256MB -c effective_cache_size=1GB -c work_mem=10MB"
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./scripts/setup_ml_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
