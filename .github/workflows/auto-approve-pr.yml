@@ -10,7 +10,7 @@ jobs:
     # Only auto-approve PRs created by YOUR personal account
     if: github.actor == 'pluto-atom-4'
     steps:
-      - name: Approve PR
+      - name: Approve Pull Request
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.BOT_TOKEN }}
@@ -21,15 +21,4 @@ jobs:
               pull_number: context.issue.number,
               event: 'APPROVE',
               body: 'Auto-approved by bot after author review. ✅'
-            })
-      - name: Enable Auto-Merge
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            github.rest.pulls.enableAutomerge({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.issue.number,
-              merge_method: 'squash'
             })
