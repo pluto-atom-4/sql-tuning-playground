@@ -21,20 +21,21 @@ SET FOREIGN_KEY_CHECKS=0;
 -- ============================================================================
 -- 1. INSERT USERS
 -- ============================================================================
-DELETE FROM wp_users;
-INSERT INTO wp_users (user_login, user_pass, user_nicename, user_email, user_url, display_name)
+TRUNCATE TABLE wp_users;
+INSERT INTO wp_users (user_login, user_pass, user_nicename, user_email, user_url, display_name, user_activation_key)
 VALUES
-  ('admin', MD5('password'), 'admin', 'admin@university.edu', 'https://example.edu', 'Site Admin'),
-  ('editor', MD5('password'), 'editor', 'editor@university.edu', 'https://example.edu', 'Editor'),
-  ('author1', MD5('password'), 'author1', 'author1@university.edu', 'https://example.edu', 'Faculty Author'),
-  ('author2', MD5('password'), 'author2', 'author2@university.edu', 'https://example.edu', 'Research Fellow');
+  ('admin', MD5('password'), 'admin', 'admin@university.edu', 'https://example.edu', 'Site Admin', ''),
+  ('editor', MD5('password'), 'editor', 'editor@university.edu', 'https://example.edu', 'Editor', ''),
+  ('author1', MD5('password'), 'author1', 'author1@university.edu', 'https://example.edu', 'Faculty Author', ''),
+  ('author2', MD5('password'), 'author2', 'author2@university.edu', 'https://example.edu', 'Research Fellow', '');
 
 -- ============================================================================
 -- 2. INSERT POSTS
 -- ============================================================================
-DELETE FROM wp_posts;
+TRUNCATE TABLE wp_posts;
 INSERT INTO wp_posts
-  (post_author, post_date, post_date_gmt, post_content, post_title, post_status, post_type, post_name, guid, menu_order)
+  (post_author, post_date, post_date_gmt, post_content, post_title, post_status, post_type, post_name, guid, menu_order,
+   to_ping, pinged, post_mime_type, post_excerpt, post_password, post_content_filtered)
 SELECT
   FLOOR(RAND() * 4) + 1 as post_author,
   DATE_SUB(NOW(), INTERVAL FLOOR(RAND() * 365) DAY) as post_date,
@@ -50,7 +51,13 @@ SELECT
   'post' as post_type,
   CONCAT('post-title-', @row) as post_name,
   CONCAT('https://example.edu/posts/post-', @row) as guid,
-  0 as menu_order
+  0 as menu_order,
+  '' as to_ping,
+  '' as pinged,
+  '' as post_mime_type,
+  'This is a blog post about research, teaching, or university activities.' as post_excerpt,
+  '' as post_password,
+  '' as post_content_filtered
 FROM (SELECT @row := 0) t1
 LIMIT 100;
 
@@ -61,7 +68,7 @@ LIMIT 100;
 -- 50 metadata entries per post × 100 posts = 5,000 rows
 -- WITHOUT compound index (post_id, meta_key), every lookup is a full table scan
 --
-DELETE FROM wp_postmeta;
+TRUNCATE TABLE wp_postmeta;
 INSERT INTO wp_postmeta (post_id, meta_key, meta_value)
 SELECT
   p.ID as post_id,
@@ -88,7 +95,7 @@ FROM wp_posts p,
 -- WordPress loads ALL autoload options on every page request
 -- A typical bloated site has 1-5MB of autoload data
 --
-DELETE FROM wp_options;
+TRUNCATE TABLE wp_options;
 INSERT INTO wp_options (option_name, option_value, autoload)
 VALUES
   -- Core WordPress options (small, essential)
@@ -117,10 +124,11 @@ VALUES
 -- ============================================================================
 -- 5. INSERT COMMENTS
 -- ============================================================================
-DELETE FROM wp_comments;
+TRUNCATE TABLE wp_comments;
 INSERT INTO wp_comments
   (comment_post_ID, comment_author, comment_author_email, comment_date, comment_date_gmt,
-   comment_content, comment_approved, comment_type, user_id)
+   comment_content, comment_approved, comment_type, user_id,
+   comment_author_IP, comment_author_URL, comment_agent)
 SELECT
   FLOOR(RAND() * 100) + 1 as comment_post_ID,
   CONCAT('Commenter ', FLOOR(RAND() * 1000)) as comment_author,
@@ -134,7 +142,10 @@ SELECT
     ELSE '1'         -- Approved
   END as comment_approved,
   'comment' as comment_type,
-  0 as user_id
+  0 as user_id,
+  '' as comment_author_IP,
+  '' as comment_author_URL,
+  '' as comment_agent
 FROM (
   SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
   UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10
@@ -148,7 +159,7 @@ FROM (
 -- ============================================================================
 -- 6. INSERT TERMS (Categories, Tags)
 -- ============================================================================
-DELETE FROM wp_terms;
+TRUNCATE TABLE wp_terms;
 INSERT INTO wp_terms (name, slug)
 VALUES
   ('Research', 'research'),
@@ -163,15 +174,15 @@ VALUES
 -- ============================================================================
 -- 7. INSERT TERM TAXONOMY
 -- ============================================================================
-DELETE FROM wp_term_taxonomy;
+TRUNCATE TABLE wp_term_taxonomy;
 INSERT INTO wp_term_taxonomy (term_id, taxonomy, description, parent, count)
-SELECT ID, 'category', CONCAT(name, ' posts'), 0, FLOOR(RAND() * 30)
+SELECT term_id, 'category', CONCAT(name, ' posts'), 0, FLOOR(RAND() * 30)
 FROM wp_terms LIMIT 8;
 
 -- ============================================================================
 -- 8. INSERT TERM RELATIONSHIPS
 -- ============================================================================
-DELETE FROM wp_term_relationships;
+TRUNCATE TABLE wp_term_relationships;
 INSERT INTO wp_term_relationships (object_id, term_taxonomy_id, term_order)
 SELECT
   p.ID as object_id,
@@ -185,7 +196,7 @@ LIMIT 200;
 -- ============================================================================
 -- 9. INSERT USER META
 -- ============================================================================
-DELETE FROM wp_usermeta;
+TRUNCATE TABLE wp_usermeta;
 INSERT INTO wp_usermeta (user_id, meta_key, meta_value)
 VALUES
   (1, 'first_name', 'Admin'),
